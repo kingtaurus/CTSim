@@ -12,7 +12,6 @@ ehthumbs.db
 /output/*
 /mar/kvmv/*
 /test/kvmv/*
-/test/flame/*
 /test/systems/*
 
 # Folder config file
