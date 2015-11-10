@@ -1,0 +1,786 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>test_sparse_view.m</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-11-06"><meta name="DC.source" content="test_sparse_view.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>test_sparse_view.m</h1><!--introduction--><p>Compare several reconstruction methods for sparse view CT Meng Wu at University of Erlangen-Nuremburg 2014.10</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Simulate normal CT data</a></li><li><a href="#2">Reconstruction without view downsampling</a></li><li><a href="#3">Downsample projection data to mimic sparse view case</a></li><li><a href="#4">2-Pass FBP based view undersampling artifact correction algorithms</a></li><li><a href="#5">1.  The fist multi-resoltion piecewise linear frequency response FBP</a></li><li><a href="#6">2. Extract high frequency structures in the sinogram</a></li><li><a href="#7">3. View interpolation that also perserve the shapes</a></li><li><a href="#8">wavelet based combine approach</a></li><li><a href="#9">Iterative reconstruction (penalized weighted least square)</a></li><li><a href="#10">Iterative reconstruction</a></li><li><a href="#11">Iterative reconstruction continue</a></li><li><a href="#12">Trail 2</a></li></ul></div><h2>Simulate normal CT data<a name="1"></a></h2><pre class="codeinput">clear <span class="string">all</span>;
+close <span class="string">all</span>;
+load <span class="string">'temp.mat'</span>;
+
+<span class="comment">% Load simulation parameters and datas</span>
+[phan, map] = loadXCATPhantom(p);
+
+geom = loadProjectionGeometryCT( p );
+
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+<span class="comment">% compute sinogram</span>
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDir, 1, 1, 2 );
+
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+
+weights = computeWeightsPwls( sinoRaw, 0, spectrum.electronicNoise );
+</pre><pre class="codeoutput">Loading material phantom "XCATlung-median" with material mapping "v4-XCAT-lung"... and applying material mapping "v4-XCAT-lung"... done.
+
+Loading system geometry ...
+Geometry information:
+	SDD: 949mm, SAD: 541mm
+	Number of projections: 984 
+	Detector size: 888px X 888px
+	Pixel size: 1.024mm X 1.024 mm  
+	Reconstruction size: 512  X 512  X 512  
+	Reconstruction spacing: 1.000mm X 1.000 mm X 1.000 mm  
+done.
+
+Spectra summary:
+	Number of photons per pixel: 8.7e+05 
+	Number of photons per 1mm sqr at 1m pixel: 8.6e+05 
+	Use bowtie filter with thickness from 1.00 to 10.00 mm. 
+	Bowtie flat field ratio from 0.901 to 0.424. 
+	Use automatic exposure control.
+	Use energy integrating detector.
+	 Beam | # ph. (P) | # ph. (Eff) | # ph. (Tissue) | E_min (keV) | E_max (keV) | E_avg (keV) 
+	------+-----------+-------------+----------------+-------------+-------------+-------------
+	 keV  |     9e+05 |     8e+05   |     9e+03      |     12.00   |    119.00   |     54.77   
+Done.
+
+Compute expected number of transmitted photons ...
+	use saved sinogram data. 
+Process the Raw data: ... 
+	converting to attenuation integrals by -log(I/I_0)... 
+	ploychromatic spectrum with energy integrating detector ... 
+	water base beam hardening correction ... 
+Done
+
+</pre><h2>Reconstruction without view downsampling<a name="2"></a></h2><pre class="codeinput"><span class="comment">% Filter backprojection with hamming window</span>
+
+img_fbp = reconFBP( sinoAtt, geom, <span class="string">'hamming'</span>, 1, 1);
+
+figure; imshow( img_fbp(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'FBP reconstruction hamming window (full views)'</span>;
+evaluateSoftTissue( img_fbp, spectrum, map );
+</pre><pre class="codeoutput">img_fbp: 
+	The total variation of soft tissue is 24.5 HU. 
+	The standard deviation of soft tissue is  26 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_01.png" alt=""> <h2>Downsample projection data to mimic sparse view case<a name="3"></a></h2><p>We first consider downsample by 4 which is a moderate sparse view case, hard enough for interpolation and FBP reconstruction. The TV iterative reconstruction can deal it well.</p><pre class="codeinput">rate = 4;
+[geomSparse, sinoSparse, weightsSparse ]  = convertSinogram2SparseViewScan( geom, sinoAtt, rate, weights );
+
+img_sparse_fbp = reconFBP( sinoSparse, geomSparse, <span class="string">'hamming'</span>, 1, 1);
+
+figure; imshow( img_sparse_fbp(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'FBP reconstruction (sparse views by4)'</span>;
+evaluateSoftTissue( img_sparse_fbp, spectrum, map );
+
+<span class="comment">% linear interpolation method</span>
+[sinoInterp, geomInterp] = upsamplingViews( sinoSparse, geomSparse, rate );
+
+img_sparse_fbp_interp = reconFBP( sinoInterp, geomInterp, <span class="string">'hamming'</span>, 1, 1);
+
+figure; imshow( img_sparse_fbp_interp(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'FBP linear interpolation reconstruction (sparse views by4)'</span>;
+evaluateSoftTissue( img_sparse_fbp_interp, spectrum, map );
+</pre><pre class="codeoutput">Convert to sparse view scan geometry with downsample rate = 4.000000. 
+	Geomerty information:
+	SDD: 949mm, SAD: 541mm
+	Projections: 246 form -179.82 to 178.72 degrees
+	Detector size: 888px X 888px
+	Pixel size: 1.024mm X 1.024 mm  
+	Reconstruction size: 512  X 512  X 512  
+	Reconstruction spacing: 1.000mm X 1.000 mm X 1.000 mm  
+Done!
+
+
+img_sparse_fbp: 
+	The total variation of soft tissue is 95.3 HU. 
+	The standard deviation of soft tissue is  53 HU. 
+
+
+img_sparse_fbp_interp: 
+	The total variation of soft tissue is 24.1 HU. 
+	The standard deviation of soft tissue is  29 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_02.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_03.png" alt=""> <h2>2-Pass FBP based view undersampling artifact correction algorithms<a name="4"></a></h2><p>Proposed by Meng Wu</p><p>The cause of the view undersampling artifacts in the CT reconstruction is some high frequency strutrues are not supported by the angular sampling. Although the interpolation method are often used to angular sampling rate, the high frequency structures are not well perserved in the interpolation. There are method call directional sinogram interpolation method to generate more projections by optimized (iterative) double-orientation estimation in sinogram space and directional interpolation. The challenge of this approach is the high frequency structure may hide inside the line intergral (the total attenuation). Iderally, we want to take out the part that not causing aliasing out of the sinogram. Then do a feature perserving singoram interpolation.</p><p>H. Zhang and J.-J. Sonke, &#8220;Directional sinogram interpolation for sparse angular acquisition in cone-beam computed tomography.,&#8221; J. Xray. Sci. Technol., vol. 21, no. 4, pp. 481&#8211;96, Jan. 2013.</p><h2>1.  The fist multi-resoltion piecewise linear frequency response FBP<a name="5"></a></h2><p>The fist task it try to reconstruction as image that dose not has asliasing. In other word, the image will have locally highest resoltion that is support by the scan view sampling. The image will be multi-resoltuion. Closer to the center of grantry rotation have hight resoltuion. The reconstruction as such image, we spilt the ramp filter into different components in the infrequency segment.</p><pre class="codeinput">img_fbp_ms = reconFBP2dMultiResolution( sinoSparse, geomSparse, <span class="string">'hamming'</span>, 8, 0.5, 1 );
+
+figure; imshow( img_fbp_ms(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'Multi-resoltionFBP reconstruction (sparse views by4)'</span>;
+evaluateSoftTissue( img_fbp_ms, spectrum, map );
+</pre><pre class="codeoutput">img_fbp_ms: 
+	The total variation of soft tissue is 7.26 HU. 
+	The standard deviation of soft tissue is  28 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_04.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_05.png" alt=""> <h2>2. Extract high frequency structures in the sinogram<a name="6"></a></h2><p>Forwar project the non-aliasing FBP reconstruction</p><pre class="codeinput">sinoMS = forwardProjectMex( img_fbp_ms, geomSparse  );
+
+<span class="comment">% Subtract the non-aliasing component out of the true sinogram</span>
+
+sinoResd = sinoSparse - sinoMS;
+
+figure; imshow( sinoResd', [-1 1] );
+title <span class="string">'High freqency structures thats causes view aliasing artifacts'</span>;
+</pre><img vspace="5" hspace="5" src="test_sparse_view_06.png" alt=""> <h2>3. View interpolation that also perserve the shapes<a name="7"></a></h2><pre class="codeinput"><span class="comment">% The trick of the structure preserving interpolation is directly shifting</span>
+<span class="comment">% and copying to the center the structures that are similar frow two</span>
+<span class="comment">% neighboring views.</span>
+
+[sinoUp, geomUp] = upsamplingViewFeaturePreserving( sinoResd, geomSparse, rate, rate*2, 2 );
+
+
+<span class="comment">% The movement of the high frequency structurs in the singram now looks smooth.</span>
+figure; imdisp( sinoUp', [-1 1] );
+title <span class="string">'Interpolated high freqency structures'</span>;
+
+img_residue = reconFBP( sinoUp, geomUp, <span class="string">'hamming'</span>, 1, 1);
+
+figure; imshow( img_residue(:,:,ceil(end/2)), [-0.1 0.1] );
+title <span class="string">'Restored high frequency component in the image space'</span>;
+
+<span class="comment">% combine to get final result</span>
+img_fbp_new = img_residue + img_fbp_ms;
+
+figure; imshow( img_fbp_new(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'Proposed sparse view FBP reconstruction (sparse views by4)'</span>;
+evaluateSoftTissue( img_fbp_new, spectrum, map );
+</pre><pre class="codeoutput">img_fbp_new: 
+	The total variation of soft tissue is 23.3 HU. 
+	The standard deviation of soft tissue is  28 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_07.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_08.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_09.png" alt=""> <h2>wavelet based combine approach<a name="8"></a></h2><pre class="codeinput">addpath( genpath(<span class="string">'..\Tools'</span>));
+W = Wavelet;
+
+img_fbp_ms1 = reconFBP2dMultiResolution( sinoSparse, geomSparse, <span class="string">'hamming'</span>, 8, 0.4 );
+img_fbp_ms2 = reconFBP2dMultiResolution( sinoSparse, geomSparse, <span class="string">'hamming'</span>, 8, 0.5 );
+
+<span class="comment">% compute wavlet of the non-aliasing image and residue image</span>
+im_W = W * ( img_fbp_ms2 - img_fbp_ms1 );
+im_R = W * img_residue;
+
+<span class="comment">% find the maximum 20 percents wavelet coefficients</span>
+m = sort(  abs( im_W(:) ) ,<span class="string">'descend'</span>);
+ndx = floor(length(m) * 0.2);
+thresh1 = m(ndx);
+
+<span class="comment">% use selected wavelet cofficients to restor residue image</span>
+im_W_th = im_R .* (abs(im_W) &gt; thresh1) ;
+figure; imshow( abs( im_W_th ), [0 0.1] );
+img_fbp_residue_wavelet = W' * im_W_th;
+
+<span class="comment">% combine togethon</span>
+img_fbp_new_wavelet = img_fbp_ms + img_fbp_residue_wavelet;
+
+figure; imshow( img_fbp_residue_wavelet(:,:,ceil(end/2)), [-0.1 0.1] );
+title <span class="string">'Wavelwt restored residue image'</span>;
+
+figure; imshow( img_fbp_new_wavelet(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'Proposed sparse view FBP reconstruction 2 (sparse views by4)'</span>;
+evaluateSoftTissue( img_fbp_new_wavelet, spectrum, map );
+</pre><pre class="codeoutput">
+filterType =
+
+Daubechies
+
+img_fbp_new_wavelet: 
+	The total variation of soft tissue is 13.2 HU. 
+	The standard deviation of soft tissue is  28 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_10.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_11.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_12.png" alt=""> <h2>Iterative reconstruction (penalized weighted least square)<a name="9"></a></h2><pre class="codeinput">nitn = 50;
+numos = 8;
+
+<span class="comment">% Huber penalty function</span>
+img_huber = reconPwlsSeNesterovSqs( sinoAtt, weights, geom, 2e4, <span class="string">'huber'</span>, nitn, 1e-3, numos );
+figure; imshow( img_huber(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with Huber reconstruction (full views)'</span>;
+evaluateSoftTissue( img_huber, spectrum, map );
+
+img_tv = reconPwlsSeNesterovSqs( sinoAtt, weights, geom, 40, <span class="string">'isotv'</span>, nitn, 1e-3, numos );
+figure; imshow( img_tv(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction (full views)'</span>;
+evaluateSoftTissue( img_tv, spectrum, map );
+</pre><pre class="codeoutput">Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    2.00e+04	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.256e-01     4.221e+07     3.629e+04     2.241e-03
+     2     2.256e-01     9.651e+06     3.527e+04     1.149e-03
+     3     2.257e-01     5.998e+06     3.557e+04     1.098e-03
+     4     2.259e-01     4.254e+06     3.624e+04     1.039e-03
+     5     2.261e-01     3.305e+06     3.705e+04     9.608e-04
+    10     2.266e-01     1.965e+06     4.185e+04     5.972e-04
+    20     2.279e-01     1.746e+06     4.744e+04     2.196e-04
+    30     2.287e-01     1.731e+06     4.767e+04     3.455e-05
+    40     2.290e-01     1.726e+06     4.691e+04     3.753e-05
+    45     2.291e-01     1.725e+06     4.662e+04     3.133e-05
+    46     2.291e-01     1.725e+06     4.659e+04     3.031e-05
+    47     2.291e-01     1.725e+06     4.657e+04     2.944e-05
+    48     2.291e-01     1.725e+06     4.656e+04     2.871e-05
+    49     2.291e-01     1.725e+06     4.655e+04     2.814e-05
+    50     2.291e-01     1.725e+06     4.656e+04     2.768e-05
+Done in 39min 19s.
+
+
+img_huber: 
+	The total variation of soft tissue is 16.1 HU. 
+	The standard deviation of soft tissue is  27 HU. 
+
+
+Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    4.00e+01	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.256e-01     4.220e+07     3.256e+04     2.241e-03
+     2     2.256e-01     9.647e+06     3.124e+04     1.149e-03
+     3     2.258e-01     5.994e+06     3.135e+04     1.098e-03
+     4     2.260e-01     4.249e+06     3.186e+04     1.039e-03
+     5     2.262e-01     3.300e+06     3.257e+04     9.609e-04
+    10     2.266e-01     1.960e+06     3.726e+04     5.971e-04
+    20     2.282e-01     1.742e+06     4.315e+04     2.199e-04
+    30     2.291e-01     1.726e+06     4.344e+04     3.458e-05
+    40     2.295e-01     1.722e+06     4.276e+04     3.785e-05
+    45     2.296e-01     1.721e+06     4.252e+04     3.193e-05
+    46     2.297e-01     1.721e+06     4.250e+04     3.097e-05
+    47     2.297e-01     1.721e+06     4.248e+04     3.015e-05
+    48     2.297e-01     1.720e+06     4.248e+04     2.948e-05
+    49     2.297e-01     1.720e+06     4.248e+04     2.896e-05
+    50     2.297e-01     1.720e+06     4.249e+04     2.854e-05
+Done in 43min 40s.
+
+
+img_tv: 
+	The total variation of soft tissue is  16 HU. 
+	The standard deviation of soft tissue is  28 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_13.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_14.png" alt=""> <h2>Iterative reconstruction<a name="10"></a></h2><p>TV regularized iterative reconstruction is very common method for sparse view CT reconstruction. This method usually require a stronger L1 based regularization to obtain a smooth image. The proper values of the turning parameter are often hard to determine.</p><p>[1] J. Tang, B. E. Nett, and G.-H. Chen, &#8220;Performance comparison between total variation (TV)-based compressed sensing and statistical iterative reconstruction algorithms.,&#8221; Phys. Med. Biol., vol. 54, no. 19, pp. 5781&#8211;5804, 2009.</p><pre class="codeinput">img0 = reconFBP( sinoInterp, geomInterp, <span class="string">'hamming'</span>, 1, 0.5);
+
+img_sparse_tv_1 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 40, <span class="string">'isotv'</span>, nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_1(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction beta = 40 (sparse views by4)'</span>;
+evaluateSoftTissue( img_sparse_tv_1, spectrum, map );
+
+img_sparse_tv_2 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 80, <span class="string">'isotv'</span>, nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_2(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction beta = 80 (sparse views by4)'</span>;
+evaluateSoftTissue( img_sparse_tv_2, spectrum, map );
+
+img_sparse_tv_3 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 160, <span class="string">'isotv'</span>, nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_3(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction beta = 160 (sparse views by4)'</span>;
+evaluateSoftTissue( img_sparse_tv_3, spectrum, map );
+</pre><pre class="codeoutput">Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    4.00e+01	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.243e-01     1.555e+07     2.844e+04     7.924e-04
+     2     2.245e-01     1.012e+07     2.734e+04     4.308e-04
+     3     2.249e-01     7.140e+06     2.693e+04     4.212e-04
+     4     2.251e-01     5.621e+06     2.679e+04     4.183e-04
+     5     2.251e-01     4.587e+06     2.679e+04     4.121e-04
+    10     2.250e-01     2.053e+06     2.805e+04     3.869e-04
+    20     2.249e-01     8.273e+05     3.398e+04     2.906e-04
+    30     2.249e-01     6.336e+05     3.750e+04     4.179e-05
+    40     2.248e-01     5.705e+05     3.889e+04     8.807e-05
+    45     2.248e-01     5.376e+05     4.002e+04     1.006e-04
+    46     2.248e-01     5.315e+05     4.028e+04     1.023e-04
+    47     2.248e-01     5.256e+05     4.054e+04     1.038e-04
+    48     2.248e-01     5.198e+05     4.081e+04     1.050e-04
+    49     2.248e-01     5.143e+05     4.108e+04     1.060e-04
+    50     2.248e-01     5.089e+05     4.137e+04     1.068e-04
+Done in 11min 25s.
+
+
+img_sparse_tv_1: 
+	The total variation of soft tissue is 21.6 HU. 
+	The standard deviation of soft tissue is  32 HU. 
+
+
+Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    8.00e+01	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.243e-01     1.558e+07     5.687e+04     7.923e-04
+     2     2.245e-01     1.015e+07     5.464e+04     4.307e-04
+     3     2.249e-01     7.167e+06     5.380e+04     4.210e-04
+     4     2.250e-01     5.648e+06     5.350e+04     4.181e-04
+     5     2.250e-01     4.614e+06     5.345e+04     4.119e-04
+    10     2.249e-01     2.082e+06     5.570e+04     3.862e-04
+    20     2.246e-01     8.625e+05     6.638e+04     2.882e-04
+    30     2.246e-01     6.717e+05     7.234e+04     4.120e-05
+    40     2.248e-01     6.100e+05     7.422e+04     8.641e-05
+    45     2.250e-01     5.780e+05     7.580e+04     9.843e-05
+    46     2.250e-01     5.721e+05     7.615e+04     1.000e-04
+    47     2.250e-01     5.663e+05     7.651e+04     1.014e-04
+    48     2.250e-01     5.607e+05     7.688e+04     1.026e-04
+    49     2.250e-01     5.554e+05     7.726e+04     1.035e-04
+    50     2.250e-01     5.502e+05     7.765e+04     1.042e-04
+Done in 11min 40s.
+
+
+img_sparse_tv_2: 
+	The total variation of soft tissue is 17.2 HU. 
+	The standard deviation of soft tissue is  30 HU. 
+
+
+Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    1.60e+02	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.243e-01     1.563e+07     1.137e+05     7.921e-04
+     2     2.245e-01     1.020e+07     1.092e+05     4.307e-04
+     3     2.248e-01     7.221e+06     1.074e+05     4.206e-04
+     4     2.250e-01     5.702e+06     1.067e+05     4.179e-04
+     5     2.250e-01     4.668e+06     1.064e+05     4.116e-04
+    10     2.247e-01     2.139e+06     1.099e+05     3.850e-04
+    20     2.243e-01     9.292e+05     1.271e+05     2.845e-04
+    30     2.249e-01     7.422e+05     1.355e+05     4.063e-05
+    40     2.252e-01     6.817e+05     1.367e+05     8.485e-05
+    45     2.254e-01     6.505e+05     1.380e+05     9.652e-05
+    46     2.254e-01     6.447e+05     1.383e+05     9.808e-05
+    47     2.254e-01     6.391e+05     1.386e+05     9.941e-05
+    48     2.254e-01     6.337e+05     1.389e+05     1.005e-04
+    49     2.254e-01     6.284e+05     1.392e+05     1.014e-04
+    50     2.253e-01     6.234e+05     1.396e+05     1.021e-04
+Done in 11min 29s.
+
+
+img_sparse_tv_3: 
+	The total variation of soft tissue is 10.9 HU. 
+	The standard deviation of soft tissue is  27 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_15.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_16.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_17.png" alt=""> <h2>Iterative reconstruction continue<a name="11"></a></h2><p>Use interploated projections to constrain the sparse view reconstruction, then one can reduce the strength of the TV regularization on the image domain.</p><pre class="codeinput">img_interp_tv_1 = reconPwlsSeNesterovSqs( sinoInterp, weights, geom, 40, <span class="string">'isotv'</span>, nitn, 1, numos, img0  );
+figure; imshow( img_interp_tv_1(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction beta = 40 (interplated views)'</span>;
+evaluateSoftTissue( img_interp_tv_1, spectrum, map );
+
+<span class="comment">% However, the TV based reconstruction often produces estimated projections</span>
+<span class="comment">% at the missing angles that are more accurate than the interploation</span>
+<span class="comment">% method. Thus the added constrains will introduce more errors in the</span>
+<span class="comment">% reconstruction.</span>
+<span class="comment">%</span>
+<span class="comment">% This result has be shown in the 2014 CT meeing by Prof. Pan's group.</span>
+
+<span class="comment">% Let us get forward projections at the missed angles for IR-TV</span>
+<span class="comment">% reconstructions</span>
+
+sino_sparse_tv = forwardProjectMex( img_sparse_tv_3, geom );
+
+<span class="comment">% Show the differences from true sinogram</span>
+figure; imshow( sinoAtt' - sinoInterp', [-0.2 0.2] );
+title <span class="string">'Difference between true sinogram and linear interpolated sinogram'</span>;
+
+figure; imshow( sinoAtt' - sino_sparse_tv', [-0.2 0.2] );
+title <span class="string">'Difference between true sinogram and TV estimated sinogram'</span>;
+</pre><pre class="codeoutput">Reconstructing with keV data using PWLS Nesterov05 SQS ... 
+beta  =    4.00e+01	itnlim =         50
+   itn       x(0)          PHI(x)        b*R(x)        RMSD
+     1     2.251e-01     2.879e+07     2.673e+04     1.483e-03
+     2     2.250e-01     1.113e+07     2.683e+04     1.222e-03
+     3     2.250e-01     7.969e+06     2.770e+04     1.132e-03
+     4     2.250e-01     6.724e+06     2.902e+04     1.030e-03
+     5     2.251e-01     6.136e+06     3.059e+04     9.272e-04
+    10     2.249e-01     5.396e+06     3.883e+04     5.258e-04
+    20     2.227e-01     5.301e+06     4.631e+04     1.764e-04
+    30     2.210e-01     5.281e+06     4.660e+04     4.843e-05
+    40     2.206e-01     5.289e+06     4.617e+04     3.329e-05
+    45     2.206e-01     5.291e+06     4.602e+04     2.846e-05
+    46     2.206e-01     5.292e+06     4.601e+04     2.787e-05
+    47     2.206e-01     5.292e+06     4.601e+04     2.725e-05
+    48     2.206e-01     5.293e+06     4.601e+04     2.669e-05
+    49     2.206e-01     5.293e+06     4.602e+04     2.633e-05
+    50     2.206e-01     5.293e+06     4.604e+04     2.605e-05
+Done in 46min 33s.
+
+
+img_interp_tv_1: 
+	The total variation of soft tissue is 24.7 HU. 
+	The standard deviation of soft tissue is  37 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_18.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_19.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_20.png" alt=""> <h2>Trail 2<a name="12"></a></h2><p>use random subsampling to mimic true compressed sensing, then average the reconstructions with different subsampling to get the final image. The approach does not work well. There are several following observations:   1. The subsampled reconstruction with 0.9 rate is very similar to the   TV constrained reconstruction   2. As the sample rate goes down the reconstruction becomes very   unstable.   3. The approach get even more unstable to the number of the veiws are   too small.   Therefore, in CT reconstruction, if you got some data, use all of them</p><pre class="codeinput">beta = 40;
+notest = 20;
+nitns = 20;
+
+delta = 0.9; <span class="comment">%sub random sample rate</span>
+img_sparse_tv_90 = reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, <span class="string">'isotv'</span>, nitns, delta, 1, img0  );
+<span class="keyword">for</span> i = 1:notest-1
+img_sparse_tv_90 = img_sparse_tv_90 + reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, <span class="string">'isotv'</span>, nitns, delta, 1, img0  );
+<span class="keyword">end</span>
+<span class="comment">% average</span>
+img_sparse_tv_90 = img_sparse_tv_90 / notest;
+
+figure; imshow( img_sparse_tv_90(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction 90% (sparse views by 4)'</span>;
+evaluateSoftTissue( img_sparse_tv_90, spectrum, map );
+
+delta = 0.8; <span class="comment">%sub random sample rate</span>
+img_sparse_tv_80 = reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, <span class="string">'isotv'</span>, nitns, delta, 1, img0  );
+<span class="keyword">for</span> i = 1:notest-1
+img_sparse_tv_80 = img_sparse_tv_80 + reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, <span class="string">'isotv'</span>, nitns, delta, 1, img0  );
+<span class="keyword">end</span>
+<span class="comment">% average</span>
+img_sparse_tv_80 = img_sparse_tv_80 / notest;
+
+figure; imshow( img_sparse_tv_80(:,:,ceil(end/2)), map.windowAtt );
+title <span class="string">'PWLS with TV reconstruction 80% (sparse views by 4)'</span>;
+evaluateSoftTissue( img_sparse_tv_80, spectrum, map );
+
+
+<span class="keyword">return</span>;
+</pre><pre class="codeoutput">
+img_sparse_tv_90: 
+	The total variation of soft tissue is 7.5 HU. 
+	The standard deviation of soft tissue is  25 HU. 
+
+
+img_sparse_tv_80: 
+	The total variation of soft tissue is 7.22 HU. 
+	The standard deviation of soft tissue is  25 HU. 
+
+
+</pre><img vspace="5" hspace="5" src="test_sparse_view_21.png" alt=""> <img vspace="5" hspace="5" src="test_sparse_view_22.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% test_sparse_view.m
+% Compare several reconstruction methods for sparse view CT
+% Meng Wu at University of Erlangen-Nuremburg
+% 2014.10
+
+%% Simulate normal CT data
+clear all;
+close all;
+load 'temp.mat';
+
+% Load simulation parameters and datas
+[phan, map] = loadXCATPhantom(p);
+
+geom = loadProjectionGeometryCT( p );
+
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+% compute sinogram
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDir, 1, 1, 2 );
+
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+
+weights = computeWeightsPwls( sinoRaw, 0, spectrum.electronicNoise );
+
+%% Reconstruction without view downsampling 
+
+% Filter backprojection with hamming window
+
+img_fbp = reconFBP( sinoAtt, geom, 'hamming', 1, 1);
+
+figure; imshow( img_fbp(:,:,ceil(end/2)), map.windowAtt ); 
+title 'FBP reconstruction hamming window (full views)';
+evaluateSoftTissue( img_fbp, spectrum, map );
+
+%% Downsample projection data to mimic sparse view case 
+% We first consider downsample by 4 which is a moderate sparse view case,
+% hard enough for interpolation and FBP reconstruction. The TV iterative
+% reconstruction can deal it well.
+
+rate = 4;
+[geomSparse, sinoSparse, weightsSparse ]  = convertSinogram2SparseViewScan( geom, sinoAtt, rate, weights );
+
+img_sparse_fbp = reconFBP( sinoSparse, geomSparse, 'hamming', 1, 1);
+
+figure; imshow( img_sparse_fbp(:,:,ceil(end/2)), map.windowAtt ); 
+title 'FBP reconstruction (sparse views by4)';
+evaluateSoftTissue( img_sparse_fbp, spectrum, map );
+
+% linear interpolation method
+[sinoInterp, geomInterp] = upsamplingViews( sinoSparse, geomSparse, rate );
+
+img_sparse_fbp_interp = reconFBP( sinoInterp, geomInterp, 'hamming', 1, 1);
+
+figure; imshow( img_sparse_fbp_interp(:,:,ceil(end/2)), map.windowAtt ); 
+title 'FBP linear interpolation reconstruction (sparse views by4)';
+evaluateSoftTissue( img_sparse_fbp_interp, spectrum, map );
+
+
+%% 2-Pass FBP based view undersampling artifact correction algorithms
+% Proposed by Meng Wu
+%
+% The cause of the view undersampling artifacts in the CT reconstruction is
+% some high frequency strutrues are not supported by the angular sampling.
+% Although the interpolation method are often used to angular sampling
+% rate, the high frequency structures are not well perserved in the
+% interpolation. There are method call directional sinogram interpolation
+% method to generate more projections by optimized (iterative)
+% double-orientation estimation in sinogram space and directional
+% interpolation. The challenge of this approach is the high frequency
+% structure may hide inside the line intergral (the total attenuation).
+% Iderally, we want to take out the part that not causing aliasing out of
+% the sinogram. Then do a feature perserving singoram interpolation.
+%
+% H. Zhang and J.-J. Sonke, “Directional sinogram interpolation for
+% sparse angular acquisition in cone-beam computed tomography.,�? J. Xray.
+% Sci. Technol., vol. 21, no. 4, pp. 481–96, Jan. 2013.  
+
+%% 1.  The fist multi-resoltion piecewise linear frequency response FBP
+%
+% The fist task it try to reconstruction as image that dose not has
+% asliasing. In other word, the image will have locally highest resoltion
+% that is support by the scan view sampling. The image will be
+% multi-resoltuion. Closer to the center of grantry rotation have hight
+% resoltuion. The reconstruction as such image, we spilt the ramp filter
+% into different components in the infrequency segment. 
+
+img_fbp_ms = reconFBP2dMultiResolution( sinoSparse, geomSparse, 'hamming', 8, 0.5, 1 );
+
+figure; imshow( img_fbp_ms(:,:,ceil(end/2)), map.windowAtt ); 
+title 'Multi-resoltionFBP reconstruction (sparse views by4)';
+evaluateSoftTissue( img_fbp_ms, spectrum, map );
+
+%% 2. Extract high frequency structures in the sinogram  
+% Forwar project the non-aliasing FBP reconstruction
+
+sinoMS = forwardProjectMex( img_fbp_ms, geomSparse  );
+
+% Subtract the non-aliasing component out of the true sinogram
+
+sinoResd = sinoSparse - sinoMS;
+
+figure; imshow( sinoResd', [-1 1] );
+title 'High freqency structures thats causes view aliasing artifacts';
+
+%% 3. View interpolation that also perserve the shapes
+
+% The trick of the structure preserving interpolation is directly shifting
+% and copying to the center the structures that are similar frow two
+% neighboring views. 
+
+[sinoUp, geomUp] = upsamplingViewFeaturePreserving( sinoResd, geomSparse, rate, rate*2, 2 );
+
+
+% The movement of the high frequency structurs in the singram now looks smooth. 
+figure; imdisp( sinoUp', [-1 1] );
+title 'Interpolated high freqency structures';
+
+img_residue = reconFBP( sinoUp, geomUp, 'hamming', 1, 1);
+
+figure; imshow( img_residue(:,:,ceil(end/2)), [-0.1 0.1] ); 
+title 'Restored high frequency component in the image space';
+
+% combine to get final result
+img_fbp_new = img_residue + img_fbp_ms;
+
+figure; imshow( img_fbp_new(:,:,ceil(end/2)), map.windowAtt ); 
+title 'Proposed sparse view FBP reconstruction (sparse views by4)';
+evaluateSoftTissue( img_fbp_new, spectrum, map );
+
+%% wavelet based combine approach
+addpath( genpath('..\Tools'));
+W = Wavelet;
+
+img_fbp_ms1 = reconFBP2dMultiResolution( sinoSparse, geomSparse, 'hamming', 8, 0.4 );
+img_fbp_ms2 = reconFBP2dMultiResolution( sinoSparse, geomSparse, 'hamming', 8, 0.5 );
+
+% compute wavlet of the non-aliasing image and residue image
+im_W = W * ( img_fbp_ms2 - img_fbp_ms1 );
+im_R = W * img_residue;
+
+% find the maximum 20 percents wavelet coefficients
+m = sort(  abs( im_W(:) ) ,'descend');
+ndx = floor(length(m) * 0.2);
+thresh1 = m(ndx);
+
+% use selected wavelet cofficients to restor residue image 
+im_W_th = im_R .* (abs(im_W) > thresh1) ;
+figure; imshow( abs( im_W_th ), [0 0.1] );
+img_fbp_residue_wavelet = W' * im_W_th;
+
+% combine togethon
+img_fbp_new_wavelet = img_fbp_ms + img_fbp_residue_wavelet;
+
+figure; imshow( img_fbp_residue_wavelet(:,:,ceil(end/2)), [-0.1 0.1] ); 
+title 'Wavelwt restored residue image';
+
+figure; imshow( img_fbp_new_wavelet(:,:,ceil(end/2)), map.windowAtt ); 
+title 'Proposed sparse view FBP reconstruction 2 (sparse views by4)';
+evaluateSoftTissue( img_fbp_new_wavelet, spectrum, map );
+
+%% Iterative reconstruction (penalized weighted least square)
+nitn = 50;
+numos = 8;
+
+% Huber penalty function
+img_huber = reconPwlsSeNesterovSqs( sinoAtt, weights, geom, 2e4, 'huber', nitn, 1e-3, numos );
+figure; imshow( img_huber(:,:,ceil(end/2)), map.windowAtt ); 
+title 'PWLS with Huber reconstruction (full views)';
+evaluateSoftTissue( img_huber, spectrum, map );
+
+img_tv = reconPwlsSeNesterovSqs( sinoAtt, weights, geom, 40, 'isotv', nitn, 1e-3, numos );
+figure; imshow( img_tv(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction (full views)';
+evaluateSoftTissue( img_tv, spectrum, map );
+
+
+%% Iterative reconstruction 
+% TV regularized iterative reconstruction is very common method for sparse
+% view CT reconstruction. This method usually require a stronger L1 based
+% regularization to obtain a smooth image. The proper values of the turning
+% parameter are often hard to determine. 
+%
+% [1] J. Tang, B. E. Nett, and G.-H. Chen, “Performance comparison between
+% total variation (TV)-based compressed sensing and statistical iterative
+% reconstruction algorithms.,�? Phys. Med. Biol., vol. 54, no. 19, pp.
+% 5781–5804, 2009.   
+
+img0 = reconFBP( sinoInterp, geomInterp, 'hamming', 1, 0.5);
+
+img_sparse_tv_1 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 40, 'isotv', nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_1(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction beta = 40 (sparse views by4)';
+evaluateSoftTissue( img_sparse_tv_1, spectrum, map );
+
+img_sparse_tv_2 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 80, 'isotv', nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_2(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction beta = 80 (sparse views by4)';
+evaluateSoftTissue( img_sparse_tv_2, spectrum, map );
+
+img_sparse_tv_3 = reconPwlsSeNesterovSqs( sinoSparse, weightsSparse, geomSparse, 160, 'isotv', nitn, 1, numos/rate, img0  );
+figure; imshow( img_sparse_tv_3(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction beta = 160 (sparse views by4)';
+evaluateSoftTissue( img_sparse_tv_3, spectrum, map );
+
+%% Iterative reconstruction continue
+% Use interploated projections to constrain the sparse view reconstruction,
+% then one can reduce the strength of the TV regularization on the image
+% domain.
+
+img_interp_tv_1 = reconPwlsSeNesterovSqs( sinoInterp, weights, geom, 40, 'isotv', nitn, 1, numos, img0  );
+figure; imshow( img_interp_tv_1(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction beta = 40 (interplated views)';
+evaluateSoftTissue( img_interp_tv_1, spectrum, map );
+
+% However, the TV based reconstruction often produces estimated projections
+% at the missing angles that are more accurate than the interploation
+% method. Thus the added constrains will introduce more errors in the
+% reconstruction.     
+% 
+% This result has be shown in the 2014 CT meeing by Prof. Pan's group.
+
+% Let us get forward projections at the missed angles for IR-TV
+% reconstructions
+
+sino_sparse_tv = forwardProjectMex( img_sparse_tv_3, geom );
+
+% Show the differences from true sinogram
+figure; imshow( sinoAtt' - sinoInterp', [-0.2 0.2] );
+title 'Difference between true sinogram and linear interpolated sinogram';
+
+figure; imshow( sinoAtt' - sino_sparse_tv', [-0.2 0.2] );
+title 'Difference between true sinogram and TV estimated sinogram';
+
+
+%% Trail 2
+% use random subsampling to mimic true compressed sensing, then average 
+% the reconstructions with different subsampling to get the final image.
+% The approach does not work well. There are several following
+% observations:
+%   1. The subsampled reconstruction with 0.9 rate is very similar to the
+%   TV constrained reconstruction
+%   2. As the sample rate goes down the reconstruction becomes very
+%   unstable.
+%   3. The approach get even more unstable to the number of the veiws are
+%   too small. 
+%   Therefore, in CT reconstruction, if you got some data, use all of them
+
+beta = 40;
+notest = 20;
+nitns = 20;
+
+delta = 0.9; %sub random sample rate
+img_sparse_tv_90 = reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, 'isotv', nitns, delta, 1, img0  );
+for i = 1:notest-1 
+img_sparse_tv_90 = img_sparse_tv_90 + reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, 'isotv', nitns, delta, 1, img0  );
+end
+% average
+img_sparse_tv_90 = img_sparse_tv_90 / notest;
+
+figure; imshow( img_sparse_tv_90(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction 90% (sparse views by 4)';
+evaluateSoftTissue( img_sparse_tv_90, spectrum, map );
+
+delta = 0.8; %sub random sample rate
+img_sparse_tv_80 = reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, 'isotv', nitns, delta, 1, img0  );
+for i = 1:notest-1 
+img_sparse_tv_80 = img_sparse_tv_80 + reconPwlsSeNesterovSqsResample( sinoSparse, weightsSparse, geomSparse, beta, 'isotv', nitns, delta, 1, img0  );
+end
+% average
+img_sparse_tv_80 = img_sparse_tv_80 / notest;
+
+figure; imshow( img_sparse_tv_80(:,:,ceil(end/2)), map.windowAtt );
+title 'PWLS with TV reconstruction 80% (sparse views by 4)';
+evaluateSoftTissue( img_sparse_tv_80, spectrum, map );
+
+
+
+
+
+
+return;
+
+
+##### SOURCE END #####
+--></body></html>

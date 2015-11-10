@@ -1,0 +1,35 @@
+To use the CONRAD package within Matlab, the following steps are necessary:
+
+1) Copy library files from CONRAD to the Matlab directory:
+	 To do that, copy all files from "...\CONRAD\lib" to "...\MATLAB\R2012b\bin\win64"
+	 (NOTE: There will be some file conflicts, please save the old files from the Matlab distribution to some new directory, e.g. "OriginalMatlabLibraries" and use the CONRAD files)
+	
+2)  Add the "MatCon" directory, located inside the CONRAD directory, to your Matlab path.
+
+3)	Before you can use CONRAD you need to load all the libraries to Matlab
+
+	% Do this by the following Matlab commands:
+	% (It is recomended to put this initial call to the Matlab startup file "startup.m")
+	c=CONRAD(<Path-To-Conrad>); % This file is located in the "MatCon" directory
+	c.initialize();
+
+	% To check if it works, you can open ImageJ by typing the following into your Matlab console
+	import ij.*;
+	ImageJ();
+	
+4) Check the "MatlabCONRADtutorial.m" to see the reconstruction example
+   (Of course this only works if your CONRAD OpenCL is working)
+   
+   
+Note 1:  You might want to increase the Java heap memory settings of Matlab
+		 a) In Matlab go to "Preferences"
+		 b) Go to the "General" tab and then to "Java Heap Memory"
+		 c) The heap memory can be increased up to a maximum of 8164MB
+		(Note: If you need more heap memory, use a "java.opts" file as described in http://www.mathworks.de/support/solutions/en/data/1-18I2C/)
+	
+NOTE 2: Please verify that the Java version of your Matlab JVM is at least as new as the Java version that you use to build CONRAD.
+		-> You can check your Matlab-Java version by entering "version -java" into your Matlab Command Window
+		-> If you compile CONRAD with a higher version, e.g. 1.7 or 1.8, you can set compatibility in your Eclipse package by:
+			1) Open Eclipse with the CONRAD workspace
+			2) Goto: Project -> Properties -> Java Compiler
+			3) Set the JDK Compliance level to your Matlab's Java version

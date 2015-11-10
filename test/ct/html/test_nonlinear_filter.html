@@ -1,0 +1,385 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Compare nonlinear filter for FBP denoising</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-26"><meta name="DC.source" content="test_nonlinear_filter.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Compare nonlinear filter for FBP denoising</h1><!--introduction--><p>Meng Wu at Stanford University and University of Erlangen and Nuremberg 2014</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load parameters</a></li><li><a href="#2">reconstruction method</a></li><li><a href="#3">Simulate the raw data</a></li><li><a href="#4">Process the raw data.</a></li><li><a href="#5">FBP reconstruction</a></li><li><a href="#6">Reconstruct variance map</a></li><li><a href="#7">Projction Space Bilateral Filter</a></li><li><a href="#8">Bilateral Filter in Image Domain</a></li><li><a href="#9">Anisotrpic adaptive bilateral filter in image domian</a></li><li><a href="#10">Nonlocal Mean Filter in Image Domain</a></li><li><a href="#11">Struture Adaptive Sinogram Filter</a></li><li><a href="#12">Local Quadratic Programming Filter</a></li></ul></div><h2>Load parameters<a name="1"></a></h2><pre class="codeinput"><span class="comment">% Load current CT system configuration</span>
+load <span class="string">'temp.mat'</span>;
+
+<span class="comment">% Load numerical phantom parameters</span>
+[phan, map] = loadXCATPhantom(p);
+
+<span class="comment">% geometry info</span>
+geom = loadProjectionGeometryCT( p );
+
+<span class="comment">% Geometry info</span>
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+<span class="comment">% Compute ground truth</span>
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+</pre><pre class="codeoutput">Loading material phantom "XCATliver2-median-3d" with material mapping "v6-XCAT-liver"... and applying material mapping "v6-XCAT-liver"... done.
+
+Loading system geometry ...
+Geometry information:
+	SDD: 949mm, SAD: 541mm
+	Number of projections: 984 
+	Detector size: 888px X 16px
+	Pixel size: 1.024mm X 0.625 mm  
+	Reconstruction size: 512  X 512  X 3  
+	Reconstruction spacing: 1.000mm X 1.000 mm X 1.500 mm  
+done.
+
+Spectra summary:
+	Number of photons per pixel: 8.7e+05 
+	Number of photons per 1mm sqr at 1m pixel: 1.4e+06 
+	Use bowtie filter with thickness from 1.00 to 10.00 mm. 
+	Bowtie flat field ratio from 0.901 to 0.424. 
+	Use automatic exposure control.
+	 Beam | # ph. (P) | # ph. (Eff) | # ph. (Tissue) | E_min (keV) | E_max (keV) | E_avg (keV) 
+	------+-----------+-------------+----------------+-------------+-------------+-------------
+	 keV  |     9e+05 |     8e+05   |     9e+03      |     12.00   |    119.00   |     62.39   
+Done.
+
+</pre><h2>reconstruction method<a name="2"></a></h2><pre class="codeinput">recon = @( sino )convertMonoAttToHu( reconFBP( sino, geom, <span class="string">'ram-lak'</span>, 1, 1), spectrum);
+reconVar = @( sino, type )convertVarAttToHu( reconFBPVar( sino, geom, <span class="string">'ram-lak'</span>, type, 1), spectrum);
+roistd = @( x )std( reshape( x( 221: 260, 201: 240, 2 ), [1600 1] ) );
+</pre><h2>Simulate the raw data<a name="3"></a></h2><pre class="codeinput">[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDir );
+sinoRawNoiseless = simulateCTRawData( phan, geom, spectrum, sinosDir, false );
+
+<span class="comment">% figure; plot( tubeCurrentProfile );</span>
+</pre><pre class="codeoutput">Compute expected number of transmitted photons ...
+	use saved sinogram data. 
+Compute expected number of transmitted photons ...
+	use saved sinogram data. 
+</pre><h2>Process the raw data.<a name="4"></a></h2><p>Flat filed normalization and log.</p><pre class="codeinput">sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+sinoAttNoiseless = processCTRawData( sinoRawNoiseless, spectrum, tubeCurrentProfile);
+</pre><pre class="codeoutput">Process the Raw data:	converting to attenuation integrals by -log(I/I_0)... 
+ploychromatic spectrum  with photon counting detector... 
+	water base beam hardening correction ... 
+Done
+
+Process the Raw data:	converting to attenuation integrals by -log(I/I_0)... 
+ploychromatic spectrum  with photon counting detector... 
+	water base beam hardening correction ... 
+Done
+
+</pre><h2>FBP reconstruction<a name="5"></a></h2><pre class="codeinput">imgFBP = recon( sinoAtt );
+figure; imshow( imgFBP(:, :, 2), [-150 150] );
+title( [ <span class="string">'FBP reconstruction '</span> num2str( roistd( imgFBP ) ) <span class="string">' HU'</span> ]);
+
+imgFBPNoiseless = recon( sinoAttNoiseless );
+figure; imshow( imgFBPNoiseless(:, :, 2), [-150 150] );
+title( [ <span class="string">'FBP noiseless reconstruction '</span> num2str( roistd( imgFBPNoiseless ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgFBP(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in FBP'</span> );
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_01.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_02.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_03.png" alt=""> <h2>Reconstruct variance map<a name="6"></a></h2><p>L. Zhu and J. StarLack, &#8220;A Practical Reconstruction Algorithm for CT Noise Variance Maps Using FBP Reconstruction,&#8221; in SPIE Medical Imaging, 2007, vol. 6510, pp. 651023&#8211;651023&#8211;8.</p><pre class="codeinput">sinoVar = computeProjectionVariance( sinoRaw, spectrum.electronicNoise, spectrum.detectorGain );
+<span class="comment">% figure; imdisp( sinoVar(3 ,:,:), [0 1e-3 ]);</span>
+
+imgVarH = reconVar( sinoVar, <span class="string">'horiz'</span>) ;
+figure; imshow( imgVarH(:,:,2), [0 1000] );
+title <span class="string">'Variance from horizontal rays'</span>;
+
+imgVarV = reconVar( sinoVar, <span class="string">'vert'</span>);
+figure; imshow( imgVarV(:,:,2), [0 1000] );
+title <span class="string">'Variance from vertical rays'</span>;
+
+imgVarAll = imgVarH + imgVarV;
+figure; imshow( imgVarAll(:,:,2), [0 1000] );
+title <span class="string">'Variance from all rays'</span>;
+
+<span class="comment">% roiVar = squeeze( imgVarAll( 200: 240, 220: 260, 2 ) );</span>
+<span class="comment">% mean(  sqrt( roiVar(:) ) )</span>
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_04.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_05.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_06.png" alt=""> <h2>Projction Space Bilateral Filter<a name="7"></a></h2><p>A. Manduca, L. Yu, J. D. Trzasko, N. Khaylova, J. M. Kofler, C. M. McCollough, and J. G. Fletcher, &#8220;Projection space denoising with bilateral filtering and CT noise modeling for dose reduction in CT,&#8221; Med. Phys., vol. 36, no. 11, p. 4911, Nov. 2009.</p><pre class="codeinput">sinoAttBilt = bilateralFilterProjectionDomain( sinoAtt, geom, 2, 1, 1 );
+imgProjBilt = recon( sinoAttBilt );
+
+figure; imshow( imgProjBilt(:, :, 2), [-150 150] );
+title( [ <span class="string">'Projection Domian Bileteral Filter '</span> num2str( roistd( imgProjBilt ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgProjBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in Projection Domian Bileteral Filter'</span> );
+</pre><pre class="codeoutput">Bilateral filter in projection domain with sd = 1.00, ss = 1.00 ... 
+	 done.
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_07.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_08.png" alt=""> <h2>Bilateral Filter in Image Domain<a name="8"></a></h2><p>J. C. R. Giraldo, Z. S. Kelm, L. S. Guimaraes, L. Yu, J. G. Fletcher, B. J. Erickson, and C. H. McCollough, &#8220;Comparative study of two image space noise reduction methods for computed tomography: bilateral filter and nonlocal means.,&#8221; IEEE Eng. Med. Biol. Soc. Conf., vol. 2009, pp. 3529&#8211;32, Jan. 2009.</p><p>A. R. Al-Hinnawi, M. Daear, and S. Huwaijah, &#8220;Assessment of bilateral filter on 1/2-dose chest-pelvis CT views.,&#8221; Radiol. Phys. Technol., vol. 6, no. 2, pp. 385&#8211;98, Jul. 2013.</p><pre class="codeinput">imgBilt = bilateralFilterImageDomain( imgFBP, 2, 1, 50 );
+
+figure; imshow( imgBilt(:, :, 2), [-150 150] );
+title( [ <span class="string">'Image Domian Bileteral Filter '</span> num2str( roistd( imgBilt ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in Image Domian Bileteral Filter'</span> );
+</pre><pre class="codeoutput">Bilateral filter in image domain with sd = 1.00, ss = 50.00 ... 
+	 done.
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_09.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_10.png" alt=""> <h2>Anisotrpic adaptive bilateral filter in image domian<a name="9"></a></h2><p>By Meng Wu</p><pre class="codeinput">imgAnisoBilt = anisotropicAdaptiveBilateralFilterImageDomain( imgFBP, imgVarH, imgVarV, 2, 1, 75, 1 );
+
+figure; imshow( imgAnisoBilt(:, :, 2), [-150 150] );
+title( [ <span class="string">'Image Domian Anisotropic Bileteral Filter '</span> num2str( roistd( imgAnisoBilt ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgAnisoBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in Image Domian Anisotropic Bileteral Filter'</span> );
+</pre><pre class="codeoutput">Anisotropic adaptive bilateral filter in image domain with sd = 1.00, ss = 75.00, beta = 1.00 ... 
+	 done.
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_11.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_12.png" alt=""> <h2>Nonlocal Mean Filter in Image Domain<a name="10"></a></h2><p>J. C. R. Giraldo, Z. S. Kelm, L. S. Guimaraes, L. Yu, J. G. Fletcher, B. J. Erickson, and C. H. McCollough, &#8220;Comparative study of two image space noise reduction methods for computed tomography: bilateral filter and nonlocal means.,&#8221; IEEE Eng. Med. Biol. Soc. Conf., vol. 2009, pp. 3529&#8211;32, Jan. 2009.</p><pre class="codeinput">imgNLM = nonLocalMeanFilterImageDomain( imgFBP, 2, 1, 1, 20 );
+
+figure; imshow( imgNLM(:, :, 2), [-150 150] );
+title( [ <span class="string">'NonLocal Mean Filter '</span> num2str( roistd( imgNLM ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgNLM(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in NonLocal Mean Filter'</span> );
+</pre><pre class="codeoutput">Non local mean filter in image domain with s = 1.00, h = 20.00 ... 
+	 done.
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_13.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_14.png" alt=""> <h2>Struture Adaptive Sinogram Filter<a name="11"></a></h2><p>Based on M. Balda, J. Hornegger, and B. Heismann, &#8220;Ray contribution masks for structure adaptive sinogram filtering.,&#8221; IEEE Trans. Med. Imaging, vol. 31, no. 6, pp. 1228&#8211;39, Jun. 2012.</p><pre class="codeinput"><span class="comment">% sinoAttSAS =  structurAdaptiveSinogramFilter( sinoAtt, geom, 3, 1 );</span>
+
+imgFBPSAS = recon( sinoAttSAS );
+
+figure; imshow( imgFBPSAS(:, :, 2), [-150 150] );
+title( [ <span class="string">'Struture adaptive sinogram filter '</span> num2str( roistd( imgFBPSAS ) ) <span class="string">' HU'</span> ]);
+
+figure; imshow( imgFBPSAS(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in NonLocal Mean Filter'</span> );
+
+<span class="keyword">return</span>;
+</pre><img vspace="5" hspace="5" src="test_nonlinear_filter_15.png" alt=""> <img vspace="5" hspace="5" src="test_nonlinear_filter_16.png" alt=""> <h2>Local Quadratic Programming Filter<a name="12"></a></h2><p>By Meng Wu</p><pre class="codeinput"><span class="comment">% imgFBPLQP = localQuadFilterImageDomain( imgFBP, imgVarAll, 3, 1 );</span>
+
+figure; imshow( imgFBPLQP(:, :, 2), [-150 150] );
+title( [ <span class="string">'Local Quadratic Programming Filter '</span> num2str( roistd( imgFBPLQP ) ) <span class="string">' HU'</span> ]);
+
+
+figure; imshow( imgFBPLQP(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( <span class="string">'Noise in Local Quadratic Programming Filter'</span> );
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Compare nonlinear filter for FBP denoising
+% Meng Wu at Stanford University and University of Erlangen and Nuremberg 
+% 2014
+
+%% Load parameters 
+
+% Load current CT system configuration
+load 'temp.mat';
+
+% Load numerical phantom parameters
+[phan, map] = loadXCATPhantom(p);
+
+% geometry info
+geom = loadProjectionGeometryCT( p );
+
+% Geometry info
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+% Compute ground truth
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+
+%% reconstruction method
+
+recon = @( sino )convertMonoAttToHu( reconFBP( sino, geom, 'ram-lak', 1, 1), spectrum);
+reconVar = @( sino, type )convertVarAttToHu( reconFBPVar( sino, geom, 'ram-lak', type, 1), spectrum);
+roistd = @( x )std( reshape( x( 221: 260, 201: 240, 2 ), [1600 1] ) );
+
+
+%% Simulate the raw data
+
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDir );
+sinoRawNoiseless = simulateCTRawData( phan, geom, spectrum, sinosDir, false );
+
+% figure; plot( tubeCurrentProfile );
+
+%% Process the raw data.
+% Flat filed normalization and log.
+
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+sinoAttNoiseless = processCTRawData( sinoRawNoiseless, spectrum, tubeCurrentProfile);
+
+%% FBP reconstruction
+
+imgFBP = recon( sinoAtt );
+figure; imshow( imgFBP(:, :, 2), [-150 150] ); 
+title( [ 'FBP reconstruction ' num2str( roistd( imgFBP ) ) ' HU' ]);
+
+imgFBPNoiseless = recon( sinoAttNoiseless );
+figure; imshow( imgFBPNoiseless(:, :, 2), [-150 150] ); 
+title( [ 'FBP noiseless reconstruction ' num2str( roistd( imgFBPNoiseless ) ) ' HU' ]);
+
+figure; imshow( imgFBP(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in FBP' );
+
+%% Reconstruct variance map
+% L. Zhu and J. StarLack, “A Practical Reconstruction Algorithm for CT
+% Noise Variance Maps Using FBP Reconstruction,” in SPIE Medical Imaging,
+% 2007, vol. 6510, pp. 651023–651023–8.    
+
+sinoVar = computeProjectionVariance( sinoRaw, spectrum.electronicNoise, spectrum.detectorGain );
+% figure; imdisp( sinoVar(3 ,:,:), [0 1e-3 ]);
+
+imgVarH = reconVar( sinoVar, 'horiz') ;
+figure; imshow( imgVarH(:,:,2), [0 1000] );
+title 'Variance from horizontal rays';
+
+imgVarV = reconVar( sinoVar, 'vert');
+figure; imshow( imgVarV(:,:,2), [0 1000] );
+title 'Variance from vertical rays';
+
+imgVarAll = imgVarH + imgVarV;
+figure; imshow( imgVarAll(:,:,2), [0 1000] );
+title 'Variance from all rays';
+
+% roiVar = squeeze( imgVarAll( 200: 240, 220: 260, 2 ) );
+% mean(  sqrt( roiVar(:) ) )
+
+%% Projction Space Bilateral Filter
+% A. Manduca, L. Yu, J. D. Trzasko, N. Khaylova, J. M. Kofler, C. M.
+% McCollough, and J. G. Fletcher, “Projection space denoising with
+% bilateral filtering and CT noise modeling for dose reduction in CT,” Med.
+% Phys., vol. 36, no. 11, p. 4911, Nov. 2009.    
+
+sinoAttBilt = bilateralFilterProjectionDomain( sinoAtt, geom, 2, 1, 1 );
+imgProjBilt = recon( sinoAttBilt );
+
+figure; imshow( imgProjBilt(:, :, 2), [-150 150] );
+title( [ 'Projection Domian Bileteral Filter ' num2str( roistd( imgProjBilt ) ) ' HU' ]);
+
+figure; imshow( imgProjBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in Projection Domian Bileteral Filter' );
+
+
+%% Bilateral Filter in Image Domain 
+% J. C. R. Giraldo, Z. S. Kelm, L. S. Guimaraes, L. Yu, J. G. Fletcher,
+% B. J. Erickson, and C. H. McCollough, “Comparative study of two image
+% space noise reduction methods for computed tomography: bilateral filter
+% and nonlocal means.,” IEEE Eng. Med. Biol. Soc. Conf., vol. 2009, pp.
+% 3529–32, Jan. 2009.    
+%
+% A. R. Al-Hinnawi, M. Daear, and S. Huwaijah, “Assessment of bilateral
+% filter on 1/2-dose chest-pelvis CT views.,” Radiol. Phys. Technol., vol.
+% 6, no. 2, pp. 385–98, Jul. 2013.    
+
+imgBilt = bilateralFilterImageDomain( imgFBP, 2, 1, 50 );
+
+figure; imshow( imgBilt(:, :, 2), [-150 150] ); 
+title( [ 'Image Domian Bileteral Filter ' num2str( roistd( imgBilt ) ) ' HU' ]);
+
+figure; imshow( imgBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in Image Domian Bileteral Filter' );
+
+%% Anisotrpic adaptive bilateral filter in image domian
+%
+% By Meng Wu
+
+imgAnisoBilt = anisotropicAdaptiveBilateralFilterImageDomain( imgFBP, imgVarH, imgVarV, 2, 1, 75, 1 );
+
+figure; imshow( imgAnisoBilt(:, :, 2), [-150 150] ); 
+title( [ 'Image Domian Anisotropic Bileteral Filter ' num2str( roistd( imgAnisoBilt ) ) ' HU' ]);
+
+figure; imshow( imgAnisoBilt(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in Image Domian Anisotropic Bileteral Filter' );
+
+%% Nonlocal Mean Filter in Image Domain
+% J. C. R. Giraldo, Z. S. Kelm, L. S. Guimaraes, L. Yu, J. G. Fletcher,
+% B. J. Erickson, and C. H. McCollough, “Comparative study of two image
+% space noise reduction methods for computed tomography: bilateral filter
+% and nonlocal means.,” IEEE Eng. Med. Biol. Soc. Conf., vol. 2009, pp.
+% 3529–32, Jan. 2009.    
+
+imgNLM = nonLocalMeanFilterImageDomain( imgFBP, 2, 1, 1, 20 );
+
+figure; imshow( imgNLM(:, :, 2), [-150 150] ); 
+title( [ 'NonLocal Mean Filter ' num2str( roistd( imgNLM ) ) ' HU' ]);
+
+figure; imshow( imgNLM(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in NonLocal Mean Filter' );
+
+%% Struture Adaptive Sinogram Filter 
+% Based on M. Balda, J. Hornegger, and B. Heismann, “Ray contribution masks for
+% structure adaptive sinogram filtering.,” IEEE Trans. Med. Imaging, vol.
+% 31, no. 6, pp. 1228–39, Jun. 2012.  
+
+% sinoAttSAS =  structurAdaptiveSinogramFilter( sinoAtt, geom, 3, 1 );
+
+imgFBPSAS = recon( sinoAttSAS );
+
+figure; imshow( imgFBPSAS(:, :, 2), [-150 150] );
+title( [ 'Struture adaptive sinogram filter ' num2str( roistd( imgFBPSAS ) ) ' HU' ]);
+
+figure; imshow( imgFBPSAS(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in NonLocal Mean Filter' );
+
+return;
+%% Local Quadratic Programming Filter
+%
+% By Meng Wu
+
+% imgFBPLQP = localQuadFilterImageDomain( imgFBP, imgVarAll, 3, 1 );
+
+figure; imshow( imgFBPLQP(:, :, 2), [-150 150] ); 
+title( [ 'Local Quadratic Programming Filter ' num2str( roistd( imgFBPLQP ) ) ' HU' ]);
+
+
+figure; imshow( imgFBPLQP(:, :, 2) - imgFBPNoiseless(:, :, 2), [-50 50] );
+title( 'Noise in Local Quadratic Programming Filter' );
+
+
+
+
+##### SOURCE END #####
+--></body></html>

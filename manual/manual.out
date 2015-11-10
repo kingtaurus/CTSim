@@ -1,0 +1,41 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Installation}{}% 2
+\BOOKMARK [1][-]{section.3}{Quick starts }{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Basic workflow}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Example:}{section.3}% 5
+\BOOKMARK [1][-]{section.4}{CT system}{}% 6
+\BOOKMARK [2][-]{subsection.4.1}{CT system configuration}{section.4}% 7
+\BOOKMARK [2][-]{subsection.4.2}{Geometry}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.3}{Spectrum}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.4}{Data simulation}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.5}{Process simulated data}{section.4}% 11
+\BOOKMARK [1][-]{section.5}{Reconstruction}{}% 12
+\BOOKMARK [2][-]{subsection.5.1}{Filtered back reconstruction}{section.5}% 13
+\BOOKMARK [2][-]{subsection.5.2}{Iterative reconstruction}{section.5}% 14
+\BOOKMARK [3][-]{subsubsection.5.2.1}{PWLS}{subsection.5.2}% 15
+\BOOKMARK [3][-]{subsubsection.5.2.2}{PML}{subsection.5.2}% 16
+\BOOKMARK [3][-]{subsubsection.5.2.3}{Regularization}{subsection.5.2}% 17
+\BOOKMARK [2][-]{subsection.5.3}{Forward and backward projectors}{section.5}% 18
+\BOOKMARK [1][-]{section.6}{Artifact correction}{}% 19
+\BOOKMARK [2][-]{subsection.6.1}{Aliasing}{section.6}% 20
+\BOOKMARK [2][-]{subsection.6.2}{Beam hardening}{section.6}% 21
+\BOOKMARK [2][-]{subsection.6.3}{Cone beam}{section.6}% 22
+\BOOKMARK [2][-]{subsection.6.4}{Ring}{section.6}% 23
+\BOOKMARK [2][-]{subsection.6.5}{Truncation}{section.6}% 24
+\BOOKMARK [1][-]{section.7}{Physics Data}{}% 25
+\BOOKMARK [2][-]{subsection.7.1}{X-ray attenuation coefficients}{section.7}% 26
+\BOOKMARK [2][-]{subsection.7.2}{X-ray spectra}{section.7}% 27
+\BOOKMARK [2][-]{subsection.7.3}{Phantoms}{section.7}% 28
+\BOOKMARK [1][-]{section.8}{CONRAD Integration}{}% 29
+\BOOKMARK [2][-]{subsection.8.1}{CONRAD Installation}{section.8}% 30
+\BOOKMARK [2][-]{subsection.8.2}{Add library files to Matlab}{section.8}% 31
+\BOOKMARK [2][-]{subsection.8.3}{Generate CONRAD configuration for Matlab}{section.8}% 32
+\BOOKMARK [2][-]{subsection.8.4}{Notes from Martin}{section.8}% 33
+\BOOKMARK [1][-]{section.9}{Reconstruct data from CT systems}{}% 34
+\BOOKMARK [2][-]{subsection.9.1}{Varian Truebeam}{section.9}% 35
+\BOOKMARK [2][-]{subsection.9.2}{S086 Table-top system}{section.9}% 36
+\BOOKMARK [2][-]{subsection.9.3}{Siemens Artis Zeego}{section.9}% 37
+\BOOKMARK [2][-]{subsection.9.4}{Monte Carlo simulation}{section.9}% 38
+\BOOKMARK [1][-]{section.10}{TODO list}{}% 39
+\BOOKMARK [2][-]{subsection.10.1}{Urgent:}{section.10}% 40
+\BOOKMARK [2][-]{subsection.10.2}{Long run:}{section.10}% 41

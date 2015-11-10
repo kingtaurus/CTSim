@@ -1,0 +1,634 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps� with pdflatex; use eps in DVI mode
+%% LaTeX Preamble - Common packages
+
+\usepackage[utf8]{inputenc} % Any characters can be typed directly from the keyboard, eg éçñ
+\usepackage{textcomp} % provide lots of new symbols
+%\usepackage{epstopdf} % to include .eps graphics files with pdfLaTeX
+\usepackage{flafter}  % Don't place floats before their definition
+%\usepackage{topcapt}   % Define \topcation for placing captions above tables (not in gwTeX)
+\usepackage{natbib} % use author/date bibliographic citations
+
+%\usepackage{memhfixc}  % remove conflict between the memoir class & hyperref
+% \usepackage[activate]{pdfcprot}  % Turn on margin kerning (not in gwTeX)
+%\usepackage{pdfsync}  % enable tex source and pdf output syncronicity
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{hyperref}
+
+
+\title{CTSim Users' Guide (Version 1.0) }
+\author{Meng Wu}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+\section{Introduction}
+
+CTSim is a simulation toolbox for simulating X-ray Computed Tomography (CT) data acquisition, image reconstruction, and artifacts correction. CTSim is a MATLAB based software that is designed to allow researchers to quick try out their ideas in CT system design. This manual is for user to get familiar with basic features, and provide additional information about advanced algorithms. 
+
+You must have a MALTAB later than 2011a in order to use the toolbox. The software is primarily supporting Windows 8 and Mac OS. It is recommend to run on a 64-bit version MATLAB with more than 8 GB REM.
+ 
+This software was initially developed in by Meng Wu in Dr. Rebecca Fahrig's lab at Stanford University. Many people have contributed in developing this simulation toolbox: Andreas Keil, Yuan Yao, Andreas Maier, Erica Cherry. CTSim is only allowed for academic uses. If you publish paper using this software, please consider cite this manual as a reference. 
+
+To obtain new version or report bugs, please contact Meng Wu via mengwu AT stanford DOT edu. 
+
+\pagebreak
+
+\section{Installation}
+
+
+\paragraph{1.} Download CTSim and save to your MATLAB default folder. 
+\paragraph{2.}  Compile MEX functions if needed. Details about the implement MEX functions are described in later section. More information about MATLAB MEX-function, please see  \url{http://www.mathworks.com/help/matlab/ref/mex.html}.
+\paragraph{3.}  Add and save paths to MATLAB (optional). The \texttt{startup.m} will add all necessary paths for you. 
+
+
+\pagebreak
+
+\section{Quick starts }
+
+This quick starts shows how to generate CT data from phantom and do a simple FBP reconstruction with simulated data.  
+
+\subsection{Basic workflow}
+
+The basic workflow of the simulation toolbox is:
+
+\paragraph{1.}  Read in system configuration.
+
+\paragraph{2.} Load parameters such as phantom, geometry, and spectrum, and save as structures. 
+
+\paragraph{3.} Simulate X-ray CT data.
+
+\paragraph{4.} Reconstruction, artifact correction, and analysis. 
+
+
+\subsection{Example:}
+
+The following is a step-by-step example of the basic workflow:
+
+\paragraph{1.} Go to main CTSim folder. 
+\paragraph{2.}  Run one of the \texttt{startupXXX.m} file with desired parameter file name. This script will add all necessary paths for you. It will read in all system parameters, can create a proper directory in \texttt{../CTData/} to save sinogram for you. You can also select downsample rate (recommend 2 or 4) to get quick simulation done. Many functions and algorithm in CTSim are supporting both 2D and 3D simulation. You can adjust the dimension in the  \texttt{startupXXX.m} file. 
+
+\paragraph{3.} The \texttt{/test/test\_tutorial.m} provide a simple example of using the toolbox. 
+
+
+
+
+
+\pagebreak
+
+\section{CT system}
+
+\subsection{CT system configuration}
+
+The following is an example for CT parameter \texttt{.ini} file. The file must include all of the items listed below. The \texttt{startupXXX.m} script with call function \texttt{readParametersCT()}, are save all parameters setup in \texttt{temp.mat} for future uses. It is recommended to create and read an \texttt{.ini} file even you are just want to reconstruction image from collected data. The unit of the spacing in the \texttt{.ini} file is \textbf{mm}. Please go to the corresponding section to read more about the meaning of the CT system parameters defined in the toolbox.
+
+\begin{verbatim}
+[Phantom]
+	  materialsFileName                       = XCATlung-median
+	  materialMappingName                     = v4-XCAT-lung
+[Reconstruction]
+	  size                                    = 512, 512, 64
+	  spacing                                 = 1, 1, 1
+	  offset                                  = 0, 0, 0
+[Spectra]
+	  spectrum                                = spectrum_120kV
+	  focalSpotSize                           = 0.7
+	  maximumIntensity                        = 1e7
+	  automaticExposureControl                = 1
+[Geometries]
+	  SAD                                   = 541
+	  ADD                                   = 408
+	  noViews                               = 984
+	  sizeDet                               = 888, 64
+	  spacingDet                            = 1.0239, 0.625
+	  offsetDet                             = 1.25, 0
+	  flatPanel                             = 0
+[Detector]
+	  detectorConversionEfficiency            = 0.92
+	  pointSpreadFunctionFWHM                 = 0.6
+	  noisePowerSpectrum                      = 0.2
+	  energyIntegrating                       = 0
+	  compoundPoissonNoise                    = 0
+[Paths]
+	  materialsDir                            = physicsdata/materials/
+	  spectraDir                              = physicsdata/spectra/seimens/
+[Visualization]
+	  windowAtt                               = 0.1, 0.35
+	  windowHu                                = -400, 800
+	  windowSinoKeV                            = 0, 0.4
+[Bowtie]
+	  shapeType                               = cosine
+	  alpha                                   = 8;
+	  beta                                    = 0;
+	  maximumThickness                        = 10;
+	  minimumThickness                        = 1;
+	  material                                = Aluminum
+\end{verbatim}
+
+\pagebreak
+
+\subsection{Geometry}
+
+The toolbox supports most common CT geometry including fan-beam and cone-beam, circular and helical, flat and curved detector. However, the toolbox does not implement the parallel beam simulation and reconstruction, because the parallel beam geometry is not very realistic. The parallel beam may be support in the future version. 
+
+The setup for fan-beam geometry can be done in the \texttt{startupXXX.m} by choosing 2D simulation (\texttt{dimension = 2}) and set the detector height to 1 with 3D simulation. 
+
+The definition of circular, short, and helical ( a.k.a spiral ) scan is not in the \texttt{.ini} file. This difference is made by using different load geometry functions. Because, different scan types have multiple geometry parameters that are different. It is not recommended to modify the geometry parameter structure afterward. 
+
+The detector can be either flat and curved ( a.k.a equal-distance or equal-angular ). This parameter can be either set is the \texttt{.ini} configuration file, or change in the geometry parameter structure \texttt{geom.flatPanel}.
+
+
+\paragraph{Circular scan:} 
+\begin{verbatim}
+function [ geom ] = loadProjectionGeometryCT( p )
+% Load system geometry
+%   inputs: 
+%       p - configuration parameters
+%   output:
+%       geom    - geometery parameters
+\end{verbatim}
+
+\paragraph{Helical scan:}
+\begin{verbatim}
+function [ geom ] = loadProjectionGeometryHelicalCT( p, noTurns, pitch )
+% Load helical CT system geometry
+%   inputs: 
+%       p - configuration parameters
+%       noTurns - number of hilical turns
+%       pitch   - helical pitch ( couch movement per 360 scan / detector height)
+%   output:
+%       geom    - geometery parameters
+\end{verbatim}
+
+\paragraph{Short scan:} 
+\begin{verbatim}
+function [ geom ] = loadProjectionGeometryShortScan( p, scanAngle, offsetAngle )
+% Load short scan system geometry
+%   inputs: 
+%       p - configuration parameters
+%       scanAnge - total short scan angle (in degree)
+%       offsetAngle - offset of the starting angle (default 0)
+%   output:
+%       geom    - geometery parameters
+\end{verbatim}
+
+\paragraph{Geometry parameters structure:}
+The following is an example of generated geometry parameter structure:
+\begin{verbatim}
+     originRecon: [-255 -255 -15]
+             SAD: 541
+             ADD: 408
+             SDD: 949
+         detSize: [444 32]
+      detSpacing: [2.0478 1.2500]
+       detOffset: [1.2500 0]
+         noViews: 492
+       flatPanel: 0
+             DQE: 0.9200
+          couchZ: [1x492 double]
+       reconSize: [256 256 16]
+    reconSpacing: [2 2 2]
+     reconOffset: [0 0 0]
+           betas: [1x492 double]
+       shortScan: 0
+     helicalScan: 0
+          detPSF: 0.6000
+          detNPS: 0.2000
+        focalPSF: 0.7000
+             FOV: 498.7262
+             map: [256x256 logical]
+\end{verbatim}
+
+\pagebreak
+
+\subsection{Spectrum}
+To load proper X-ray spectrum, you can use function called \texttt{loadSpectraCT}. It will read the X-ray spectrum txt file defined in the configuration file and scale it to the right level. The function allow user to choose number of photon per pixel of the unattenuated X-ray. \textbf{Conversion between mAs and photons per pixel is not supported right now.} The \texttt{loadSpectraCT} will also set up several other spectrum related parameter such as detector model (photon counting or energy integrating),  electronic noise level ( mean zeros, default standard deviation is 50), and bowtie filter. 
+
+\begin{verbatim}
+function spectrum= loadSpectraCT(p, geom, numPhotonsPerPixel )
+% Load X-ray spectra
+%   inputs:
+%       p - configuration paramters
+%       geom - geometry paramters
+%       numPhotonsPerPixel 
+%   output:
+%       spectrum - spectrum parameter
+\end{verbatim}
+
+\paragraph{Spectrum parameters structure:}
+The following is an example of generated spectrum parameter structure:
+\begin{verbatim}
+                energyBinLabels: [108x1 double]
+              energyIntegrating: 0
+           compoundPoissonNoise: 0
+                   detectorGain: 1
+            photonsPerEnergyBin: [108x1 double]
+                   photonsTotal: 8.7176e+04
+                  energyAverage: 62.3948
+                            DQE: 0.9200
+                electronicNoise: 50
+                      useBowtie: 1
+       automaticExposureControl: 1
+             maxPhotonsPerPixel: 2.8423e+07
+              photonsPerMm2At1m: 3.5183e+04
+            photonsPerSteradian: 3.5183e+10
+                bowtieThickness: [32x444 double]
+                 bowtieMaterial: 'Aluminum'
+                 flatFieldRatio: [32x444 double]
+    photonsPerEnergyBinOriginal: [108x1 double]
+           photonsTotalOriginal: 100000
+\end{verbatim}
+
+\paragraph{Detector models:}
+The toolbox now support two basic different detector models: photon counting and energy integrating. This is defined in the configuration file. The photon counting means the detected X-ray photons are not weighted by their energies. The energy integrating means the detected X-ray photons are linearly weighted by their energies, so the detector signal is energy weighted sum. The detector gain for the photon counting model is 1, and 1 / average energy for the energy integrating model. 
+
+Here is only defining the detector response types. For energy discriminating photon counting detector, there is not additional change needed in here. 
+
+
+\subsection{Data simulation}
+
+There are several options to simulated CT data:
+
+\paragraph{\texttt{simulateCTRawData.m}}
+Most realistic simulation function: including polychromatic, simple Poisson, detector blur, automatic exposure control, and both detector models. 
+
+\paragraph{\texttt{simulateSimplePoissonData.m} }
+ Simulation function using simple Poisson random variable to simulate detector noise: including polychromatic and detector blur. 
+
+\paragraph{\texttt{simulateCompoundPoissonData.m} }
+Simulation function using compound Poisson random variable to simulate detector noise. It must be polychromatic. It is only used to simulate MV data. 
+
+\paragraph{\texttt{simulatePhotonCountingDynamicData.m} }
+Simulation function use to generate dynamic (perfusion) CT data. Not very well maintained currently. 
+ 
+\paragraph{\texttt{simulateAttenuationDataPhantom.m}}
+Quick simulation of attenuation sinogram from numerical phantoms.
+
+\paragraph{\texttt{simulateAttenuationDataCT.m}} 
+Quick simulation of attenuation sinogram from CT volumes.
+
+
+\subsection{Process simulated data}
+
+The following functions can be used to compute attenuation (logged) sinogram. The some function compensate the differences in normalization caused by AEC and bowtie filter.  
+
+\paragraph{\texttt{processCTRawData.m}} Use to process raw data simulated by \texttt{simulateCTRawData.m}. AEC and bowtie filter is included. 
+
+\paragraph{\texttt{computeSimplePoissonSinogramAttunation.m}} Use to process raw data simulated by \texttt{simulateSimplePoissonData.m}. Only bowtie filter is included. 
+
+\paragraph{\texttt{computeCompoundPoissonSinogramAttunation.m}} Use to process raw data simulated by \texttt{simulateCompoundPoissonData.m}. 
+
+\pagebreak
+
+\section{Reconstruction}
+
+\subsection{Filtered back reconstruction}
+
+\paragraph{\texttt{reconFBP.m}}
+\begin{verbatim}
+function img = reconFBP( sino, geom, window, viewUpsamplingRate, crop )
+% Filtered back-projection of CT recontruction
+%   This function will call different FBP method based on the geometry
+%   parameter of the data for circular scan.
+%
+%   Now the methods include: fan beam and cone beam circular CT
+%                            2D and 3D both
+%                            flat panel and curve detector
+%                            circular scan only
+%
+%   Helical scan should call function reconHelical(), because there are
+%   many different vesions and more parameters need to be decided.
+%
+%   For helical CT, 3 methods have been implemented, but this function only call
+%   one of it. More details see implementations in the /fbp/ folder.
+%
+%   There are multiple window functions for ramp filtering can be applied.
+%   More details about the window function, see
+%           function filt = designFilter2(gamma, window, len, crop)
+%           function filt = designEquiAgularFilter2(gamma, window, len, crop)
+%
+% input:
+%       sino    - log sinogram
+%       geom    - geometry parameters
+%       window  - window function ( default 'hamming', other options: 'ram-lak', 'shepp-logan', 'cosine'  )
+%       viewUpsamplingRate (default 1)
+%       crop    - frequency crop ratio (default 1)
+% output:
+%       img     - reconstructed attenuation image (1/cm)
+%
+% Meng Wu, Stanford University, 2013-04
+% Modified 2014-03, the water correction is moved out of the FBP
+% reconstruction
+% Modified 2014-04, the helical reconstruction is move to reconHelical()
+\end{verbatim}
+
+
+\paragraph{\texttt{reconHeilical.m}}
+\begin{verbatim}
+function img = reconHelical( sino, geom, window, reconMethod, segmentLength, tiltedFilter,  viewUpsamplingRate, crop )
+% Filtered back-projection for helical X-ray CT recontruction
+%
+%   For helical CT, 3 methods have been implemented, but this function only call
+%   one of it. More details see implementations in the /fbp/ folder.
+%
+%   There are multiple window functions for ramp filtering can be applied.
+%   More details about the window function, see
+%           function filt = designFilter2(gamma, window, len, crop)
+%           function filt = designEquiAgularFilter2(gamma, window, len, crop)
+%
+% input:
+%       sino    - log sinogram
+%       geom    - geometry parameters
+%       window  - window function ( default 'hamming', other options: 'ram-lak', 'shepp-logan', 'cosine'  )
+%       viewUpsamplingRate (default 1)
+%       segmentLength 
+%       tiltedFilter
+%       crop    - frequency crop ratio (default 1)
+% output:
+%       img     - reconstructed attenuation image (1/cm)
+%
+% Meng Wu, Stanford University, 2013-04
+\end{verbatim}
+
+
+
+\pagebreak
+
+\subsection{Iterative reconstruction}
+
+The toolbox has many iterative reconstruction algorithm for X-ray CT. There are mainly two type of the model: penalized weighted least squares (PWLS) and penalized maximum likelihood (PML). Ultimately, the idea of two systems are same. In general, PWLS is easier to solver while PML is capable of including more complicate physics effects. 
+
+
+\subsubsection{PWLS}
+Functions related to PWLS reconstruction are in \url{/CTSim/statsrecon/pwls}. Example of using those reconstruction solvers are in \url{/test/ct/test_pwls_alg.m}.
+
+\begin{verbatim}
+computeWeightsPwls.m			
+reconPwlsLALMOsAs.m
+dynamicRangeAdjustment.m		
+reconPwlsLALMOsBs.m
+reconPwlsADMM.m				
+reconPwlsSeNesterovNusqs.m
+reconPwlsADMMOs.m			
+reconPwlsSeNesterovSqs.m
+reconPwlsLALM.m				
+reconPwlsSeNesterovSqsResample.m
+reconPwlsLALMFista.m			
+reconPwlsSeNusqs.m
+reconPwlsLALMFista2.m			
+reconPwlsSeSqs.m
+reconPwlsLALMOs.m			
+reconPwlsSequences.m
+reconPwlsLALMOs14.m
+\end{verbatim}
+
+\subsubsection{PML}
+Functions related to PML reconstruction are in \url{/CTSim/statsrecon/pml}. Example of using those reconstruction solvers are in \url{/test/beamhardening/test_sb.m}.
+
+
+\begin{verbatim}
+computeCompoundPoissonVarianceRatioLookupTable.m
+computePolychromaticAttLookupTable.m
+computeSwankWeights.m
+computeTriplePolychromaticAttLookupTable.m
+reconPolychromaticMaximumLikelihoodSegmLookupTable.m
+reconPolychromaticMaximumLikelihoodSpectrumBinning.m
+reconPsrSpectrumBinningADMMSqs.m
+reconPsrSpectrumBinningNesterovSqs.m
+reconPsrSpectrumBinningNusqs.m
+reconPsrSpectrumBinningSqs.m
+\end{verbatim}
+
+\subsubsection{Regularization}
+
+Of course, regularization is another important part of the iterative reconstruction. The toolbox has Quadratic, Huber, Total Variation, and hyperbola piecewise constant penalty functions. They are located in \url{/penalty}. 
+
+\begin{verbatim}
+anisotropicPenalty.m
+huberIsoPenalty.m
+huberPenalty.m
+hyperbolaPenalty.m
+loadPenaltyOperator.m
+neighborDifferences.m
+orderedSubset.m
+piecewiseDifference.m
+piecewiseDifferenceIso.m
+quadPenalty.m
+totalVariationIsoPenalty.m
+\end{verbatim}
+
+\subsection{Forward and backward projectors}
+
+\paragraph{Forward projector: } Ray driven, Distance Driven, Separable footprints. 
+
+\paragraph{Backward projector: } Pxiel driven, Distance Driven, Separable footprints. 
+
+They are all implemented in Matlab MEX (\url{http://www.mathworks.com/help/matlab/ref/mex.html}).  
+
+
+
+\pagebreak
+
+
+
+\section{Artifact correction}
+
+\subsection{Aliasing}
+
+\begin{verbatim}
+binningDetecotRows.m
+binningDetectorColumns.m
+binningDetectorPixels.m
+detectorPixelBinning.m
+upsamplingViews.m
+\end{verbatim}
+
+
+\subsection{Beam hardening}
+
+Water correction and bone-water correction. For iterative beam hardening correction, please see PML section. 
+
+\begin{verbatim}
+attMono2Poly.m
+beamHardeningCorrectionJoseph.m
+beamHardeningCorrectionPolynomialCoefficients.m
+beamHardeningMaterialCorrection.m
+beamHardeningWarterCorrection.m
+interp1geom.m
+\end{verbatim}
+
+\subsection{Cone beam}
+
+\begin{verbatim}
+reconConebeamArtifactCorrection.m
+reconShiftInvariantFBPShortScan.m
+reconTwoPassConebeamArtifactCorrectionBone.m
+reconTwoPassConebeamArtifactCorrectionTissueBone.m
+\end{verbatim}
+
+\subsection{Ring}
+
+\begin{verbatim}
+cartesian2polar.m	
+polar2cartesian.m
+getRingArtifactPolar.m	
+suppressRingArtifacts.m
+\end{verbatim}
+
+\subsection{Truncation}
+
+\begin{verbatim}
+reconATRACT1.m
+reconATRACT2.m
+reconATRACTm.m
+removeOutsideFOV.m
+truncationCorrectionCopyPatch.m
+truncationCorrectionEllipicalPatch.m
+\end{verbatim}
+
+\pagebreak
+
+
+\section{Physics Data}
+
+\subsection{X-ray attenuation coefficients}
+
+\begin{verbatim}
+function [mu, muEff] = materialAttenuation( engery, material, photonsPerEnergy, energyEff)
+% Return linear attenuation coefficeints of materails at given x-ray energy
+% Inputs: 
+%       energy - X-ray photon energies
+%       material - material name, see below for defined material names
+%       photonsPerEnergy    - use for computing effective energy
+%       energyEff           - user defined effective energy
+% Outputs:
+%       mu  - attenuation coeffient at each photon energy (cm^-1)
+%       muEff  - effective attenuation coeffient (cm^-1)
+%
+% NIST materials:
+%       {'Air_Dry_near_sea_level', 'Adipose_Tissue_ICRU-44', 'Water_Liquid', ...
+%       'Tissue_Soft_ICRU-44', 'Muscle_Skeletal_ICRU-44', 'B-100_Bone-Equivalent_Plastic', ...
+%       'Bone_Cortical_ICRU-44', 'Aluminum', 'Titanium', 'Iron', 'Copper', 'AK-Amalgam', 'Gold'}
+% Self defined materials:
+%       {'adipose', 'blood', 'bone_compact', 'bone_cortical', 'brain', 'lung', ...
+%        'muscle_skeletal', 'muscle_striated', 'skin', 'soft_tissue', 'water', 'air' ...
+%        'CWO', 'Acrylic', 'PMP', 'Delrin', 'Teflon', 'Polystryrene', 'Bone20', 'Bone50' ...,
+%        'LDPE' };
+% Elements with alphabetical symbles
+%
+% Meng Wu at Stanford University
+% 2013 - 2014
+\end{verbatim}
+
+\subsection{X-ray spectra}
+
+\url{/physicsdata/spectra/}
+
+\subsection{Phantoms}
+
+Coming soon...
+
+\pagebreak
+
+
+\section{CONRAD Integration}
+
+The toolbox can be integrated with CONRAD, which is a state-of-the-art software platform with extensive documentation. CONRAD is a very powerful tool to reconstruct C-arm system data, generate motion phantom images etc. This integration process is developed by Martin Berger. 
+
+\subsection{CONRAD Installation}
+To use CONRAD in the toolbox, you will have to install CONRAD as usual (\url{http://www5.cs.fau.de/conrad/tutorials/user-guide/installation/}). Please be careful, when you select Java complier version. It has to be same as the Matlab JVM version. 
+
+To check Matlab JVM version, use command: \texttt{version -java}. 
+
+To change Java complier version in Eclipse: right click project label $->$ Properties $->$ Java Complier $->$ JDK Campliance. 
+
+
+\subsection{Add library files to Matlab}
+
+\paragraph{(1)} Copy library files from CONRAD to the Matlab directory. To do that, copy all files from \url{...\ CONRAD \ lib} to \url{...\ MATLAB \ R2012b \ bin \ win6}. NOTE: There will be some file conflicts, please save the old files from the Matlab distribution to some new directory, e.g. original Matlab libraries  and use the CONRAD files.
+
+\paragraph{(2)}  Add the \url{...\ util \ conrad} directory, containing basic CONRAD interfaces, to your Matlab path. The \texttt{startupXXX.m} usually did that already. 
+
+	
+\paragraph{(3)} Open \url{ ...\ util \ conrad \ startupCONRAD.m } and change the CONRAD install directory to your own install path. Run the startup script. If the installation is successful, you will see several pop up windows same as the reconstruction pipeline framework in CONRAD. Ignore all the warning about static Java path. 
+
+\subsection{Generate CONRAD configuration for Matlab}
+
+The configuration cannot be set up in the Matlab right now. You have to open Eclipse and generate a proper one in CONRAD.
+
+\paragraph{(1)} Run the main GUI from package \texttt{edu.stanford.rsl.apps.gui} in class ReconstructionPipelineFrame. The image on the right shows the GUI main window. Click "Edit Configuration" to configure the trajectory.
+
+\paragraph{(2)} After you saved the configuration in CONRAD, there will be a new configuration file called \texttt{Conrad.xml} in your windows home folder. The system will load the configuration from there. \textbf{You need to run \texttt{startupCONRAD.m} again whenever you changed the configuration }
+
+
+\paragraph{(3)} Example codes of using the openCL projectors and CONRAD reconstruction are in \texttt{MatlabCONRADtutorial.m}. You should not have trouble to run it now. You can also save your own configuration, and tell the system to use it. The example of using the customized configuration is in the tutorial code. 
+
+\subsection{Notes from Martin}
+
+\begin{verbatim}
+Note 1:  You might want to increase the Java heap memory settings of Matlab
+		 a) In Matlab go to "Preferences"
+		 b) Go to the "General" tab and then to "Java Heap Memory"
+		 c) The heap memory can be increased up to a maximum of 8164MB
+		(Note: If you need more heap memory, use a "java.opts" file as described in http://www.mathworks.de/support/solutions/en/data/1-18I2C/)
+	
+
+NOTE 2: Please verify that the Java version of your Matlab JVM is at least as new as the 
+Java version that you use to build CONRAD.
+		-> You can check your Matlab-Java version by entering "version -java" into your 
+			Matlab Command Window
+		-> If you compile CONRAD with a higher version, e.g. 1.7 or 1.8, you can 
+			set compatibility in your Eclipse package by:
+			1) Open Eclipse with the CONRAD workspace
+			2) Goto: Project -> Properties -> Java Compiler
+			3) Set the JDK Compliance level to your Matlab's Java version
+\end{verbatim}
+
+\pagebreak
+
+\section{Reconstruct data from CT systems}
+
+\subsection{Varian Truebeam}
+
+Useful function: \url{/util/varian/}. Example: \url{/test/kvmv/test_truebeam_data.m}
+
+
+\subsection{S086 Table-top system}
+
+Useful function: \url{/util/tabletop/}. Example: \url{/test/beamhardening/test_bhc_real.m}
+
+\subsection{Siemens Artis Zeego}
+
+Useful function: \url{/util/zeego/}. Example: \url{/test/beamhardening/test_bhc_real.m}.
+
+You can also use CONRAD to process Zeego data. 
+
+\subsection{Monte Carlo simulation}
+
+Developing...
+
+\pagebreak
+
+\section{TODO list}
+
+\subsection{Urgent:}
+
+\subsection{Long run:}
+
+%\subsection{}
+
+
+
+\end{document}  

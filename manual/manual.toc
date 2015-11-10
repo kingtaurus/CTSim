@@ -1,0 +1,76 @@
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}
+\contentsline {section}{\numberline {2}Installation}{5}{section.2}
+\contentsline {paragraph}{1.}{5}{section*.2}
+\contentsline {paragraph}{2.}{5}{section*.3}
+\contentsline {paragraph}{3.}{5}{section*.4}
+\contentsline {section}{\numberline {3}Quick starts }{6}{section.3}
+\contentsline {subsection}{\numberline {3.1}Basic workflow}{6}{subsection.3.1}
+\contentsline {paragraph}{1.}{6}{section*.5}
+\contentsline {paragraph}{2.}{6}{section*.6}
+\contentsline {paragraph}{3.}{6}{section*.7}
+\contentsline {paragraph}{4.}{6}{section*.8}
+\contentsline {subsection}{\numberline {3.2}Example:}{6}{subsection.3.2}
+\contentsline {paragraph}{1.}{6}{section*.9}
+\contentsline {paragraph}{2.}{6}{section*.10}
+\contentsline {paragraph}{3.}{6}{section*.11}
+\contentsline {section}{\numberline {4}CT system}{7}{section.4}
+\contentsline {subsection}{\numberline {4.1}CT system configuration}{7}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Geometry}{9}{subsection.4.2}
+\contentsline {paragraph}{Circular scan:}{9}{section*.12}
+\contentsline {paragraph}{Helical scan:}{9}{section*.13}
+\contentsline {paragraph}{Short scan:}{9}{section*.14}
+\contentsline {paragraph}{Geometry parameters structure:}{10}{section*.15}
+\contentsline {subsection}{\numberline {4.3}Spectrum}{11}{subsection.4.3}
+\contentsline {paragraph}{Spectrum parameters structure:}{11}{section*.16}
+\contentsline {paragraph}{Detector models:}{12}{section*.17}
+\contentsline {subsection}{\numberline {4.4}Data simulation}{12}{subsection.4.4}
+\contentsline {paragraph}{\texttt {simulateCTRawData.m}}{12}{section*.18}
+\contentsline {paragraph}{\texttt {simulateSimplePoissonData.m} }{12}{section*.19}
+\contentsline {paragraph}{\texttt {simulateCompoundPoissonData.m} }{12}{section*.20}
+\contentsline {paragraph}{\texttt {simulatePhotonCountingDynamicData.m} }{12}{section*.21}
+\contentsline {paragraph}{\texttt {simulateAttenuationDataPhantom.m}}{12}{section*.22}
+\contentsline {paragraph}{\texttt {simulateAttenuationDataCT.m}}{12}{section*.23}
+\contentsline {subsection}{\numberline {4.5}Process simulated data}{12}{subsection.4.5}
+\contentsline {paragraph}{\texttt {processCTRawData.m}}{12}{section*.24}
+\contentsline {paragraph}{\texttt {computeSimplePoissonSinogramAttunation.m}}{13}{section*.25}
+\contentsline {paragraph}{\texttt {computeCompoundPoissonSinogramAttunation.m}}{13}{section*.26}
+\contentsline {section}{\numberline {5}Reconstruction}{14}{section.5}
+\contentsline {subsection}{\numberline {5.1}Filtered back reconstruction}{14}{subsection.5.1}
+\contentsline {paragraph}{\texttt {reconFBP.m}}{14}{section*.27}
+\contentsline {paragraph}{\texttt {reconHeilical.m}}{14}{section*.28}
+\contentsline {subsection}{\numberline {5.2}Iterative reconstruction}{16}{subsection.5.2}
+\contentsline {subsubsection}{\numberline {5.2.1}PWLS}{16}{subsubsection.5.2.1}
+\contentsline {subsubsection}{\numberline {5.2.2}PML}{16}{subsubsection.5.2.2}
+\contentsline {subsubsection}{\numberline {5.2.3}Regularization}{17}{subsubsection.5.2.3}
+\contentsline {subsection}{\numberline {5.3}Forward and backward projectors}{17}{subsection.5.3}
+\contentsline {paragraph}{Forward projector: }{17}{section*.29}
+\contentsline {paragraph}{Backward projector: }{17}{section*.30}
+\contentsline {section}{\numberline {6}Artifact correction}{18}{section.6}
+\contentsline {subsection}{\numberline {6.1}Aliasing}{18}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}Beam hardening}{18}{subsection.6.2}
+\contentsline {subsection}{\numberline {6.3}Cone beam}{18}{subsection.6.3}
+\contentsline {subsection}{\numberline {6.4}Ring}{18}{subsection.6.4}
+\contentsline {subsection}{\numberline {6.5}Truncation}{18}{subsection.6.5}
+\contentsline {section}{\numberline {7}Physics Data}{20}{section.7}
+\contentsline {subsection}{\numberline {7.1}X-ray attenuation coefficients}{20}{subsection.7.1}
+\contentsline {subsection}{\numberline {7.2}X-ray spectra}{20}{subsection.7.2}
+\contentsline {subsection}{\numberline {7.3}Phantoms}{20}{subsection.7.3}
+\contentsline {section}{\numberline {8}CONRAD Integration}{21}{section.8}
+\contentsline {subsection}{\numberline {8.1}CONRAD Installation}{21}{subsection.8.1}
+\contentsline {subsection}{\numberline {8.2}Add library files to Matlab}{21}{subsection.8.2}
+\contentsline {paragraph}{(1)}{21}{section*.31}
+\contentsline {paragraph}{(2)}{21}{section*.32}
+\contentsline {paragraph}{(3)}{21}{section*.33}
+\contentsline {subsection}{\numberline {8.3}Generate CONRAD configuration for Matlab}{21}{subsection.8.3}
+\contentsline {paragraph}{(1)}{21}{section*.34}
+\contentsline {paragraph}{(2)}{22}{section*.35}
+\contentsline {paragraph}{(3)}{22}{section*.36}
+\contentsline {subsection}{\numberline {8.4}Notes from Martin}{22}{subsection.8.4}
+\contentsline {section}{\numberline {9}Reconstruct data from CT systems}{23}{section.9}
+\contentsline {subsection}{\numberline {9.1}Varian Truebeam}{23}{subsection.9.1}
+\contentsline {subsection}{\numberline {9.2}S086 Table-top system}{23}{subsection.9.2}
+\contentsline {subsection}{\numberline {9.3}Siemens Artis Zeego}{23}{subsection.9.3}
+\contentsline {subsection}{\numberline {9.4}Monte Carlo simulation}{23}{subsection.9.4}
+\contentsline {section}{\numberline {10}TODO list}{24}{section.10}
+\contentsline {subsection}{\numberline {10.1}Urgent:}{24}{subsection.10.1}
+\contentsline {subsection}{\numberline {10.2}Long run:}{24}{subsection.10.2}
