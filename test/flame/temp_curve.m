@@ -8,7 +8,6 @@ imgAirReg = imgAir;
 
 for i = 1 : size( imgAir, 3 )
     
-    i 
     slice = imregister(imgAir(:, :, i), imgKr(:,:,i), 'rigid', optimizer, metric);
     
     imgAirReg( :,:,i) = slice;
@@ -18,7 +17,7 @@ end
 
 
 %%
-solid = imgAir > 0.2;
+solid = imgAirReg > 0.2;
 
 final = solid;
 
@@ -43,7 +42,7 @@ end
 
 final = final | solid_blurred;
 
-final( :, :, 419 : end ) = false;
+final( :, :, 395 : end ) = false;
 
 
 %% 
@@ -65,11 +64,7 @@ for i = 1 : length( att_curve )
     
 end
 
-
-figure; plot( att_curve ); axis([1 450 -0.01 0.02])
-
-
-figure; plot( att_curve([33:333])/att_curve(333) ); %axis([33 333 -0.01 0.02])
+figure; plot( att_curve ); 
 
 figure;
 imagesc( squeeze( imgSub(:,end/2,:) )' , [-0.01 0.02] ); 
