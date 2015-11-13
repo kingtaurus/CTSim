@@ -18,7 +18,7 @@ if nargin < 3
 end
 
 if nargin < 5
-    ffieldIndexX = [701, 830 ];
+    ffieldIndexX = [701, 800 ];
     ffieldIndexY = [101, 500 ];
 end
 
