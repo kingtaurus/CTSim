@@ -14,7 +14,7 @@ sinoAttAir = beamHardeningMaterialCorrection(sinoAttAir, spectrum, 'Quartz', 10 
 
 %% load normal scan data
 
-dataPath = 'E:\Data\NasaFlame\Nov_10_2015_Study\3ppi_interface_60kV_50mA\kr100_01\';
+dataPath = 'E:\Data\NasaFlame\Nov_10_2015_Study\3ppi_interface_60kV_50mA\marker_01\';
 
 %dataPath = 'E:\Data\NasaFlame\Nov_5_2015_Study\DiffusionFlameLaminar_1\';
 
@@ -27,7 +27,7 @@ sinoAtt = beamHardeningMaterialCorrection(sinoAtt, spectrum, 'Quartz', 10 );
 geomAir = geom;
 geomAir.reconOffset(3) = geom.reconOffset(3) ;
 
-imgAir = reconFBP( sinoAttAir, geomAir, 'hamming' );
+imgAir = reconFBP( sinoAttAir, geomAir, 'ram-lak' );
 
 figure(21); 
 if geom.reconSize(3) < 40

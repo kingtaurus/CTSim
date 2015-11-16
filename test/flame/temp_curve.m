@@ -1,13 +1,36 @@
+clear all;
 close all;
 
-% of course, we need subtraction images
-imgSub = imgKr - imgAir;
+data = load( 'burn_01.mat');
+imgKr = data.img;
+
+data = load( 'air_hot_02.mat');
+imgAir = data.img;
+
+clear data;
+
+%% image registration, you may skip this step
+
+imgKrReg = imgKr;
+
+[optimizer, metric] = imregconfig('monomodal');
+for i = 1 : size( imgAir, 3 )
+    if mod(i, 50) == 0
+        fprintf('(%i/%i)... ', i, size(imgAir, 3 ) );
+    end
+    slice = imregister(imgKr(:,:,i), imgAir(:, :, i), 'rigid', optimizer, metric);
+    imgKrReg( :,:,i) = slice;
+end
+
+figure(23); imdisp( imgKr(:,end/2,:) - imgAir(:,end/2,:)  , [-0.1 0.1] );
 
 %% Get image pixel that are not gas
 
+imgSub = imgKr - imgAir;
+
 % segmentation
-solid = imgAir > 0.18;
-solid = solid | imgKrReg > 0.18 ;
+solid = imgAir > 0.22;
+solid = solid | imgKr > 0.22;
 
 % mophological blurring in all dimension
 final = solid;
@@ -15,34 +38,34 @@ solid_blurred = solid;
 
 % in x direction
 for i = 1 : size( imgAir, 1 )
-    solid_blurred( i, :, : ) = imdilate( solid(i,:,:) , ones(3) ); 
+    solid_blurred( i, :, : ) = imdilate( solid(i,:,:) , ones(5) ); 
 end
 final = final | solid_blurred;
 
 % in y direction
 for i = 1 : size( imgAir, 1 )
-    solid_blurred( :, i, : ) = imdilate( solid(:,i,:) , ones(3) ); 
+    solid_blurred( :, i, : ) = imdilate( solid(:,i,:) , ones(5) ); 
 end
 final = final | solid_blurred;
 
 % in z direction
 for i = 1 : size( imgAir, 3 )
-    solid_blurred( :, :, i ) = imdilate( solid(:,:,i) , ones(3) ); 
+    solid_blurred( :, :, i ) = imdilate( solid(:,:,i) , ones(5) ); 
 end
 final = final | solid_blurred;
 
 final = final | abs( imgSub ) > 0.04;
 
 % for slices that have porous media below system resolution
-% final( :, :, 241 : end ) = false;
+ final( :, :, 370 : end ) = false;
 
 
 %% Now let's compute average density for each slice
 close all;
 
 % bounding box with the
-x = [77 180];
-y = [75 180];
+x = [123 284];
+y = [180 290];
 
 %final( 120:140,120:140,:) = true;
 
