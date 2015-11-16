@@ -18,7 +18,7 @@ if nargin < 3
 end
 
 if nargin < 5
-    ffieldIndexX = [701, 830 ];
+    ffieldIndexX = [701, 800 ];
     ffieldIndexY = [101, 500 ];
 end
 
@@ -46,24 +46,25 @@ fclose(fid);
 validIndexX = [ detWidth/2 - validPixelsX/2 + 1 ,   detWidth/2 + validPixelsX/2];
 validIndexY = [ detHeight/2 - validPixelsY/2 + 1 ,   detHeight/2 + validPixelsY/2];
 
-figure; imdisp( frame); hold on;
-plot( validIndexX, validIndexY );
-plot( validIndexX(2:-1:1), validIndexY );
-plot( validIndexX([1 1]), validIndexY );
-plot( validIndexX([2 2]), validIndexY );
-plot( validIndexX, validIndexY([1 1]) );
-plot( validIndexX, validIndexY([2 2]) );
-
-if flatFieldIntensity == 0
-    % an air region to extrac flat field x-ray intensity
-    plot( ffieldIndexX, ffieldIndexY, 'r' );
-    plot( ffieldIndexX(2:-1:1), ffieldIndexY , 'r');
-    plot( ffieldIndexX([1 1]), ffieldIndexY , 'r');
-    plot( ffieldIndexX([2 2]), ffieldIndexY , 'r');
-    plot( ffieldIndexX, ffieldIndexY([1 1]) , 'r');
-    plot( ffieldIndexX, ffieldIndexY([2 2]) , 'r');
+if 0
+    figure; imdisp( frame); hold on;
+    plot( validIndexX, validIndexY );
+    plot( validIndexX(2:-1:1), validIndexY );
+    plot( validIndexX([1 1]), validIndexY );
+    plot( validIndexX([2 2]), validIndexY );
+    plot( validIndexX, validIndexY([1 1]) );
+    plot( validIndexX, validIndexY([2 2]) );
+    
+    if flatFieldIntensity == 0
+        % an air region to extrac flat field x-ray intensity
+        plot( ffieldIndexX, ffieldIndexY, 'r' );
+        plot( ffieldIndexX(2:-1:1), ffieldIndexY , 'r');
+        plot( ffieldIndexX([1 1]), ffieldIndexY , 'r');
+        plot( ffieldIndexX([2 2]), ffieldIndexY , 'r');
+        plot( ffieldIndexX, ffieldIndexY([1 1]) , 'r');
+        plot( ffieldIndexX, ffieldIndexY([2 2]) , 'r');
+    end
 end
-
 %% load projections
 
 sinoPC = zeros(validPixelsY, validPixelsX, noViews, 'single');

@@ -6,46 +6,56 @@ geom = loadProjectionGeometryCT( p );
 spectrum = loadSpectraCT(p, geom, 2e6);
 
 %% load air scan data
-dataPathAir = 'E:\Data\NasaFlame\Nov_6_2015_Study\combusion_10ppisic_60kV_50ma\air_scan\';
+dataPathAir = 'E:\Data\NasaFlame\Nov_10_2015_Study\3ppi_interface_60kV_50mA\air_cold_04\';
 
 sinoAttAir = loadTableTopData( dataPathAir, geom );
 
+sinoAttAir = beamHardeningMaterialCorrection(sinoAttAir, spectrum, 'Quartz', 10 );
+
 %% load normal scan data
 
-dataPath = 'E:\Data\NasaFlame\Nov_6_2015_Study\combusion_10ppisic_60kV_50ma\burn_02\';
+dataPath = 'E:\Data\NasaFlame\Nov_10_2015_Study\3ppi_interface_60kV_50mA\marker_01\';
 
 %dataPath = 'E:\Data\NasaFlame\Nov_5_2015_Study\DiffusionFlameLaminar_1\';
 
 sinoAtt = loadTableTopData( dataPath, geom );
 
+sinoAtt = beamHardeningMaterialCorrection(sinoAtt, spectrum, 'Quartz', 10 );
+
 %%
 
-sinoAttAirBHC = beamHardeningMaterialCorrection(sinoAttAir, spectrum, 'Quartz', 10 );
 geomAir = geom;
-geomAir.reconOffset(3) = geom.reconOffset(3) + 0.1;
+geomAir.reconOffset(3) = geom.reconOffset(3) ;
 
-imgAir = reconFBP( sinoAttAirBHC, geomAir, 'hamming' );
+imgAir = reconFBP( sinoAttAir, geomAir, 'ram-lak' );
 
-figure(21); imdisp( imgAir, [0 0.5]   );
-
-%%
-
-sinoAttBHC = beamHardeningMaterialCorrection(sinoAtt, spectrum, 'Quartz', 10 );
-
-imgKr = reconFBP( sinoAttBHC, geom, 'hamming' );
-
-figure(22); imdisp( imgKr, [0 0.5] );
+figure(21); 
+if geom.reconSize(3) < 40
+    imdisp( imgAir, [0 0.5]   );
+else
+    imdisp( imgAir(end / 2, :, : ), [0 0.5]   );
+end
 
 %%
-imgAirReg = imgAir;
+imgKr = reconFBP( sinoAtt, geom, 'hamming' );
+
+figure(22);
+if geom.reconSize(3) < 40
+    imdisp( imgKr, [0 0.5] );
+else
+    imdisp( imgKr(end / 2, :, : ), [0 0.5] );
+end
+
+%%
+imgKrReg = imgKr;
 
 [optimizer, metric] = imregconfig('monomodal');
 for i = 1 : size( imgAir, 3 )
     if mod(i, 50) == 0
-       fprintf('(%i/%i)... ', i, size(imgAir, 3 ) ); 
+        fprintf('(%i/%i)... ', i, size(imgAir, 3 ) );
     end
-    slice = imregister(imgAir(:, :, i), imgKr(:,:,i), 'rigid', optimizer, metric);
-    imgAirReg( :,:,i) = slice;
+    slice = imregister(imgKr(:,:,i), imgAir(:, :, i), 'rigid', optimizer, metric);
+    imgKrReg( :,:,i) = slice;
 end
 
-figure; imdisp( imgKr(:,end/2,:) - imgAirReg(:,end/2,:)  , [0 0.1] );
+figure(23); imdisp( imgKrReg(:,end/2,:) - imgAir(:,end/2,:)  , [-0.1 0.1] );
