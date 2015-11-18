@@ -1,7 +1,9 @@
 load 'temp.mat'
 
-[phan, map] = loadXCATPhantom(p);
+%[phan, map] = loadXCATPhantom(p);
 %[phan, map] = loadXCATPhantomDistorted(p);
+
+[phan, map ] = loadMaterialsDensityPhantom( p );
 
 %% first of all generate prime simulation data, here is the helical case
 
@@ -10,8 +12,11 @@ load 'temp.mat'
 
 turns = 2;
 %pitch = 0.9;
-pitch = 0.3;
+%pitch = 0.3;
+pitch = 0.25;
 
+phan.offset(1) = 30;
+phan.offset(2) = 0;
 
 [ geom ] = loadProjectionGeometryHelicalCT( p, turns, pitch );
 
@@ -105,8 +110,11 @@ figure; imdisp(  abs( sinoScaledPrime -  sinoRaw ) ./ sinoRaw, [0 1] );
 %load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis_Cone_Scout.mat');
 %load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Helical_Scout.mat');
 %load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\DistortedPelvisData.mat');
-load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Scout.mat');
+%load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Scout.mat');
+load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Simulation4_Scout.mat');
 
+%all_primary = all_primary(:,2:end-1,:);
+%all_scatter = all_scatter(:,2:end-1,:);
 
 
 %sinoPrime = rotateSinogram( primary_bowtie, 0, 1 );
@@ -134,3 +142,14 @@ figure; imdisp( (log10( sinoPrime )), [0 8]);
 % sinoPrime = p1*sinoPrime;
 % figure; imdisp( (log10( sinoRaw(35:60,:,:) )), [0 8]);
 % figure; imdisp( (log10( sinoPrime(35:60,:,:) )), [0 8]);
+
+%% For Helical CT
+figure; imdisp( (log10( sinoRaw(end/3+1: 2*end/3, :, :) ) ), [0 8]);
+figure; imdisp( (log10( sinoPrime(end/3+1: 2*end/3, :, :) ) ), [0 8]);
+
+%% For Helical detector C
+figure; imdisp( (log10( sinoRaw(end/3+1: 2*end/3, :, :) ) ), [0 8]);
+figure; imdisp( (log10( sinoPrime(6: end-5, :, :) ) ), [0 8]);
+
+
+
