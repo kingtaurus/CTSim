@@ -1,0 +1,322 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>test_sys_helical.m</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-02"><meta name="DC.source" content="test_sys_helical.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>test_sys_helical.m</h1><!--introduction--><p>This test script is mainly for testing the helical system geometry, helical reconstruction, and cone-beam artifacts</p><p>Meng Wu at Stanford University 2013 - 2014</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load simulation parameters and datas</a></li><li><a href="#2">Simulate the raw data</a></li><li><a href="#3">Process the raw data.</a></li><li><a href="#4">Truncation artifact correction</a></li><li><a href="#5">Weighted FDK reconstruction without trucation correction</a></li><li><a href="#6">Weighted FDK reconstruction with trucation correction</a></li><li><a href="#7">View-weighted FDK reconstruction with trucation correction</a></li><li><a href="#8">Two-pass cone beam artifact correction version 1</a></li><li><a href="#9">Two-pass cone beam artifact correction version 2</a></li></ul></div><h2>Load simulation parameters and datas<a name="1"></a></h2><pre class="codeinput">load <span class="string">'temp.mat'</span>;
+
+<span class="comment">% load phantom</span>
+[phan, map] = loadXCATPhantom(p);
+
+turns = 8;
+<span class="comment">% feel free to change the helical pitch</span>
+pitch = 0.5;
+
+sinosDirKeV = [sinosDirKeV sprintf( <span class="string">'%i-turns-%i-pitch'</span>, turns, round( pitch * 100 ) ), <span class="string">'/'</span>];
+
+<span class="comment">% geometry info</span>
+geom = loadProjectionGeometryHelicalCT( p, turns, pitch );
+
+<span class="comment">% Specturm info</span>
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+<span class="comment">% Compute ground truth</span>
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+</pre><pre class="codeoutput">Loading material phantom "XCATlung-3d" with material mapping "v4-XCAT-lung"... and applying material mapping "v4-XCAT-lung"... done.
+
+Loading system geometry ...
+Geometry information:
+	SDD: 1300mm, SAD: 650mm
+	Projections per Turn: 360, number of turns: 8 with pitch 0.500000
+	Detector size: 256px X 16px
+	Pixel size: 4.000mm X 4.000 mm  
+	Reconstruction size: 128  X 128  X 64  
+	Reconstruction spacing: 4.000mm X 4.000 mm X 4.000 mm  
+done.
+
+Spectra summary:
+	Number of photons per pixel: 8.7e+05 
+	Number of photons per 1mm sqr at 1m pixel: 1.1e+05 
+	Use bowtie filter with thickness from 1.00 to 9.95 mm. 
+	Bowtie flat field ratio from 0.901 to 0.425. 
+	Use automatic exposure control.
+	Use energy integrating detector.
+	 Beam | # ph. (P) | # ph. (Eff) | # ph. (Tissue) | E_min (keV) | E_max (keV) | E_avg (keV) 
+	------+-----------+-------------+----------------+-------------+-------------+-------------
+	 keV  |     9e+05 |     8e+05   |     9e+03      |     12.00   |    119.00   |     54.77   
+Done.
+
+</pre><h2>Simulate the raw data<a name="2"></a></h2><pre class="codeinput">[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDirKeV );
+</pre><pre class="codeoutput">Compute expected number of transmitted photons ...
+	use saved sinogram data. 
+</pre><h2>Process the raw data.<a name="3"></a></h2><p>Flat filed normalization and log.</p><pre class="codeinput">sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+</pre><pre class="codeoutput">Computing intensity ratio I/I_0 for ploychromatic spectrum  with photon counting detector... 
+	converting to attenuation integrals by -log(I/I_0)... Done
+
+</pre><h2>Truncation artifact correction<a name="4"></a></h2><pre class="codeinput">geom_orignal = geom;
+[ sinoAtt_trun_corr, geom_trun_corr ] = truncationCorrectionWaterCylinderFitting( sinoAtt, geom_orignal, 0.2, 4, 64 );
+</pre><h2>Weighted FDK reconstruction without trucation correction<a name="5"></a></h2><pre class="codeinput"><span class="comment">% setting for reconstruction</span>
+kernel = <span class="string">'hamming'</span>;
+segmentLength = <span class="string">'short'</span>;
+weightingMethod = <span class="string">'wfdk'</span>;
+
+<span class="comment">% call reconstruction function</span>
+img_wfdk = reconHelical( sinoAtt, geom_orignal, kernel, weightingMethod, segmentLength, false);
+
+<span class="comment">% display</span>
+img_wfdk = rotateSinogram( img_wfdk, 0, 1 );
+figure; imdisp( img_wfdk(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_01.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_02.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_03.png" alt=""> <h2>Weighted FDK reconstruction with trucation correction<a name="6"></a></h2><pre class="codeinput"><span class="comment">% call reconstruction function</span>
+img_wfdk_trun_corr = reconHelical( sinoAtt_trun_corr, geom_trun_corr, kernel, weightingMethod, segmentLength, false);
+
+<span class="comment">% display</span>
+img_wfdk_trun_corr = rotateSinogram( img_wfdk_trun_corr, 0, 1 );
+figure; imdisp( img_wfdk_trun_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_trun_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_trun_corr(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_04.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_05.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_06.png" alt=""> <h2>View-weighted FDK reconstruction with trucation correction<a name="7"></a></h2><pre class="codeinput"><span class="comment">% change weighting method to 'vwfdk'</span>
+img_vwfdk_trun_corr = reconHelical( sinoAtt_trun_corr, geom_trun_corr, kernel, <span class="string">'vwfdk'</span>, segmentLength, false);
+
+<span class="comment">% display</span>
+img_vwfdk_trun_corr = rotateSinogram( img_vwfdk_trun_corr, 0, 1 );
+figure; imdisp( img_vwfdk_trun_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_vwfdk_trun_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_vwfdk_trun_corr(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and vwfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_07.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_08.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_09.png" alt=""> <h2>Two-pass cone beam artifact correction version 1<a name="8"></a></h2><pre class="codeinput"><span class="comment">% initalize baseline recon method</span>
+reconFunc = @(sino)reconHelical( sino, geom_trun_corr, kernel, weightingMethod, segmentLength);
+
+<span class="comment">% call reconstruction function</span>
+img_wfdk_2pass_1 = reconTwoPassConebeamArtifactCorrectionBone( sinoAtt_trun_corr, geom_trun_corr, reconFunc, 0.2 );
+
+<span class="comment">% display</span>
+img_wfdk_2pass_1 = rotateSinogram( img_wfdk_2pass_1, 0, 1 );
+figure; imdisp( img_wfdk_2pass_1(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_1(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_1(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_10.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_11.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_12.png" alt=""> <h2>Two-pass cone beam artifact correction version 2<a name="9"></a></h2><pre class="codeinput"><span class="comment">% call reconstruction function</span>
+img_wfdk_2pass_2 = reconTwoPassConebeamArtifactCorrectionTissueBone( sinoAtt_trun_corr, geom_trun_corr, reconFunc, 0.2 );
+
+<span class="comment">% display</span>
+img_wfdk_2pass_2 = rotateSinogram( img_wfdk_2pass_2, 0, 1 );
+figure; imdisp( img_wfdk_2pass_2(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_2(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_2(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(64), 10/(64), 20/(64), 30/(64), 40/(64), 50/(64), 60/(64), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_13.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_14.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_15.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% test_sys_helical.m
+% This test script is mainly for testing the helical system geometry, 
+% helical reconstruction, and cone-beam artifacts
+%
+% Meng Wu at Stanford University
+% 2013 - 2014
+
+%% Load simulation parameters and datas
+
+load 'temp.mat';
+
+% load phantom
+[phan, map] = loadXCATPhantom(p);
+
+turns = 8;
+% feel free to change the helical pitch
+pitch = 0.5; 
+
+sinosDirKeV = [sinosDirKeV sprintf( '%i-turns-%i-pitch', turns, round( pitch * 100 ) ), '/'];
+
+% geometry info
+geom = loadProjectionGeometryHelicalCT( p, turns, pitch );
+
+% Specturm info
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+% Compute ground truth
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+
+%% Simulate the raw data
+
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDirKeV );
+
+%% Process the raw data. 
+% Flat filed normalization and log.  
+
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+
+%% Truncation artifact correction
+
+geom_orignal = geom;
+[ sinoAtt_trun_corr, geom_trun_corr ] = truncationCorrectionWaterCylinderFitting( sinoAtt, geom_orignal, 0.2, 4, 64 );
+
+%% Weighted FDK reconstruction without trucation correction
+
+% setting for reconstruction
+kernel = 'hamming';
+segmentLength = 'short';
+weightingMethod = 'wfdk';
+
+% call reconstruction function
+img_wfdk = reconHelical( sinoAtt, geom_orignal, kernel, weightingMethod, segmentLength, false);
+
+% display
+img_wfdk = rotateSinogram( img_wfdk, 0, 1 );
+figure; imdisp( img_wfdk(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk(end/2,:,:))) , map.windowAtt );
+
+
+%% Weighted FDK reconstruction with trucation correction
+
+% call reconstruction function
+img_wfdk_trun_corr = reconHelical( sinoAtt_trun_corr, geom_trun_corr, kernel, weightingMethod, segmentLength, false);
+
+% display
+img_wfdk_trun_corr = rotateSinogram( img_wfdk_trun_corr, 0, 1 );
+figure; imdisp( img_wfdk_trun_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_trun_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_trun_corr(end/2,:,:))) , map.windowAtt );
+
+
+%% View-weighted FDK reconstruction with trucation correction
+
+% change weighting method to 'vwfdk'
+img_vwfdk_trun_corr = reconHelical( sinoAtt_trun_corr, geom_trun_corr, kernel, 'vwfdk', segmentLength, false);
+
+% display
+img_vwfdk_trun_corr = rotateSinogram( img_vwfdk_trun_corr, 0, 1 );
+figure; imdisp( img_vwfdk_trun_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_vwfdk_trun_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_vwfdk_trun_corr(end/2,:,:))) , map.windowAtt );
+
+
+%% Two-pass cone beam artifact correction version 1
+
+% initalize baseline recon method
+reconFunc = @(sino)reconHelical( sino, geom_trun_corr, kernel, weightingMethod, segmentLength);
+
+% call reconstruction function
+img_wfdk_2pass_1 = reconTwoPassConebeamArtifactCorrectionBone( sinoAtt_trun_corr, geom_trun_corr, reconFunc, 0.2 );
+
+% display
+img_wfdk_2pass_1 = rotateSinogram( img_wfdk_2pass_1, 0, 1 );
+figure; imdisp( img_wfdk_2pass_1(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_1(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_1(end/2,:,:))) , map.windowAtt );
+
+%% Two-pass cone beam artifact correction version 2
+
+% call reconstruction function
+img_wfdk_2pass_2 = reconTwoPassConebeamArtifactCorrectionTissueBone( sinoAtt_trun_corr, geom_trun_corr, reconFunc, 0.2 );
+
+% display
+img_wfdk_2pass_2 = rotateSinogram( img_wfdk_2pass_2, 0, 1 );
+figure; imdisp( img_wfdk_2pass_2(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_2(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_2pass_2(end/2,:,:))) , map.windowAtt );
+
+
+
+##### SOURCE END #####
+--></body></html>
