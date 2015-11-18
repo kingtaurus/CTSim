@@ -1,0 +1,307 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>test_sys_helical_scatter.m</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-02"><meta name="DC.source" content="test_sys_helical_scatter.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>test_sys_helical_scatter.m</h1><!--introduction--><p>This test script is mainly for testing the helical system geometry, helical reconstruction, and scatter simulation.</p><p>Meng Wu at Stanford University 2013 - 2014</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load simulation parameters and datas</a></li><li><a href="#2">Simulate the raw data</a></li><li><a href="#3">Load MC scatter simulation results</a></li><li><a href="#4">Process the raw data</a></li><li><a href="#5">Reconstruction for no scattering case</a></li><li><a href="#6">Reconstruction for scattering no correction case</a></li><li><a href="#7">Reconstruction for scattering with perfect correction case</a></li></ul></div><h2>Load simulation parameters and datas<a name="1"></a></h2><pre class="codeinput">load <span class="string">'temp.mat'</span>;
+
+<span class="comment">% load phantom</span>
+[phan, map] = loadXCATPhantom(p);
+
+turns = 6;
+pitch = 31/32;
+sinosDirKeV = [sinosDirKeV sprintf( <span class="string">'%i-turns-%i-pitch'</span>, turns, round( pitch * 100 ) ), <span class="string">'/'</span>];
+
+<span class="comment">% Geometry info</span>
+geom = loadProjectionGeometryHelicalCT( p, turns, pitch );
+
+<span class="comment">% Specturm info</span>
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+<span class="comment">% Compute ground truth</span>
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+</pre><pre class="codeoutput">Loading material phantom "XCATlung-3d" with material mapping "v4-XCAT-lung"... and applying material mapping "v4-XCAT-lung"... done.
+
+Loading system geometry ...
+Geometry information:
+	SDD: 1300mm, SAD: 650mm
+	Projections per Turn: 720, number of turns: 6 with pitch 0.968750
+	Detector size: 512px X 32px
+	Pixel size: 2.000mm X 2.000 mm  
+	Reconstruction size: 272  X 272  X 128  
+	Reconstruction spacing: 2.000mm X 2.000 mm X 2.000 mm  
+done.
+
+Spectra summary:
+	Number of photons per pixel: 8.7e+05 
+	Number of photons per 1mm sqr at 1m pixel: 4.2e+05 
+	Use bowtie filter with thickness from 1.00 to 9.95 mm. 
+	Bowtie flat field ratio from 0.901 to 0.425. 
+	Use automatic exposure control.
+	Use energy integrating detector.
+	 Beam | # ph. (P) | # ph. (Eff) | # ph. (Tissue) | E_min (keV) | E_max (keV) | E_avg (keV) 
+	------+-----------+-------------+----------------+-------------+-------------+-------------
+	 keV  |     9e+05 |     8e+05   |     9e+03      |     12.00   |    119.00   |     54.77   
+Done.
+
+</pre><h2>Simulate the raw data<a name="2"></a></h2><pre class="codeinput"><span class="comment">% sinoRaw is the data set without any scatter</span>
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDirKeV );
+</pre><pre class="codeoutput">Compute expected number of transmitted photons ...
+	use saved sinogram data. 
+</pre><h2>Load MC scatter simulation results<a name="3"></a></h2><pre class="codeinput">load( <span class="string">'E:\MATLAB\CTData\ScatterSimulation\helical\scatter_helical_bowtie_pitch1_32rows.mat'</span> );
+
+<span class="comment">% sinoRaw_scatter is the data set after adding the simulated scatter, no</span>
+<span class="comment">% algorithm correction at all (anti-scatter grid is used)</span>
+
+[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, primary_bowtie, scatter_bowtie, 10  );
+<span class="comment">% sinoRaw_scatter_corr is the data set after adding the simulated scatter,</span>
+<span class="comment">% no algorithm correction at all (anti-scatter grid is used)</span>
+
+sinoRaw_scatter_corr = combineScatterSimulation( sinoRaw, primary_bowtie, scatter_bowtie, 10, 1 );
+
+figure; imshow( log10( squeeze( sinoRaw(end/2,:,1:10:end) ) ), [0 6]); title <span class="string">'Primary photons'</span>;
+figure; imshow( log10( squeeze( sinoPrime(end/2,:,:)) ), [0 6] ); title <span class="string">'Primary photons from MC'</span>;
+figure; imshow( log10( squeeze( sinoScatter(end/2,:,:)) ), [0 6] ); title <span class="string">'Scattered photons from MC'</span>;
+</pre><pre class="codeoutput">Adding Monte Carlo scatter signals:at (1/433)... at (50/433)... at (100/433)... at (150/433)... at (200/433)... at (250/433)... at (300/433)... at (350/433)... at (400/433)... (118s)
+Adding Monte Carlo scatter signals:at (1/433)... at (50/433)... at (100/433)... at (150/433)... at (200/433)... at (250/433)... at (300/433)... at (350/433)... at (400/433)... (116s)
+</pre><img vspace="5" hspace="5" src="test_sys_helical_scatter_01.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_02.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_03.png" alt=""> <h2>Process the raw data<a name="4"></a></h2><pre class="codeinput">geom_orignal = geom;
+
+<span class="comment">% Flat filed normalization and log.</span>
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+<span class="comment">% Truncation artifact correction</span>
+[ sinoAtt, geom ] = truncationCorrectionWaterCylinderFitting( sinoAtt, geom_orignal, 0.2, 4, 64 );
+
+<span class="comment">% same here</span>
+sinoAtt_scatter = processCTRawData( sinoRaw_scatter, spectrum, tubeCurrentProfile);
+sinoAtt_scatter = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter, geom_orignal, 0.2, 4, 64 );
+
+<span class="comment">% same here</span>
+sinoAtt_scatter_corr = processCTRawData( sinoRaw_scatter_corr, spectrum, tubeCurrentProfile);
+sinoAtt_scatter_corr = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter_corr, geom_orignal, 0.2, 4, 64 );
+</pre><pre class="codeoutput">Computing intensity ratio I/I_0 for ploychromatic spectrum  with photon counting detector... 
+	converting to attenuation integrals by -log(I/I_0)... Done
+
+Computing intensity ratio I/I_0 for ploychromatic spectrum  with photon counting detector... 
+	converting to attenuation integrals by -log(I/I_0)... Done
+
+Computing intensity ratio I/I_0 for ploychromatic spectrum  with photon counting detector... 
+	converting to attenuation integrals by -log(I/I_0)... Done
+
+</pre><h2>Reconstruction for no scattering case<a name="5"></a></h2><pre class="codeinput"><span class="comment">% setting for reconstruction</span>
+kernel = <span class="string">'hamming'</span>;
+segmentLength = <span class="string">'short'</span>;
+weightingMethod = <span class="string">'wfdk'</span>;
+
+<span class="comment">% call reconstruction function</span>
+img_wfdk_noscatter = reconHelical( sinoAtt, geom, kernel, weightingMethod, segmentLength, false);
+
+<span class="comment">% display</span>
+img_wfdk_noscatter = rotateSinogram( img_wfdk_noscatter, 0, 1 );
+figure; imdisp( img_wfdk_noscatter(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_noscatter(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_noscatter(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(128), 10/(128), 20/(128), 30/(128), 40/(128), 50/(128), 60/(128), 70/(128), 80/(128), 90/(128), 100/(128), 110/(128), 120/(128), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_scatter_04.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_05.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_06.png" alt=""> <h2>Reconstruction for scattering no correction case<a name="6"></a></h2><pre class="codeinput"><span class="comment">% call reconstruction function</span>
+img_wfdk_scatter = reconHelical( sinoAtt_scatter, geom, kernel, weightingMethod, segmentLength, false);
+
+<span class="comment">% display</span>
+img_wfdk_scatter = rotateSinogram( img_wfdk_scatter, 0, 1 );
+figure; imdisp( img_wfdk_scatter(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(128), 10/(128), 20/(128), 30/(128), 40/(128), 50/(128), 60/(128), 70/(128), 80/(128), 90/(128), 100/(128), 110/(128), 120/(128), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_scatter_07.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_08.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_09.png" alt=""> <h2>Reconstruction for scattering with perfect correction case<a name="7"></a></h2><pre class="codeinput"><span class="comment">% call reconstruction function</span>
+img_wfdk_scatter_corr = reconHelical( sinoAtt_scatter_corr, geom, kernel, weightingMethod, segmentLength, false);
+
+<span class="comment">% display</span>
+img_wfdk_scatter_corr = rotateSinogram( img_wfdk_scatter_corr, 0, 1 );
+figure; imdisp( img_wfdk_scatter_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter_corr(end/2,:,:))) , map.windowAtt );
+</pre><pre class="codeoutput">FBP Hilical CT  reconstruction with short line segement and wfdk method:  
+	Use pi + fan rotation for reconstruction. 
+	Warning: the pitch may be too large to coverage entire FOV. 
+	Slice: 1/(128), 10/(128), 20/(128), 30/(128), 40/(128), 50/(128), 60/(128), 70/(128), 80/(128), 90/(128), 100/(128), 110/(128), 120/(128), 
+Done.
+</pre><img vspace="5" hspace="5" src="test_sys_helical_scatter_10.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_11.png" alt=""> <img vspace="5" hspace="5" src="test_sys_helical_scatter_12.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% test_sys_helical_scatter.m
+% This test script is mainly for testing the helical system geometry, 
+% helical reconstruction, and scatter simulation.
+%
+% Meng Wu at Stanford University
+% 2013 - 2014
+
+%% Load simulation parameters and datas
+
+load 'temp.mat';
+
+% load phantom
+[phan, map] = loadXCATPhantom(p);
+
+turns = 6;
+pitch = 31/32;
+sinosDirKeV = [sinosDirKeV sprintf( '%i-turns-%i-pitch', turns, round( pitch * 100 ) ), '/'];
+
+% Geometry info
+geom = loadProjectionGeometryHelicalCT( p, turns, pitch );
+
+% Specturm info
+spectrum = loadSpectraCT(p, geom, 1e6);
+
+% Compute ground truth
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+
+
+%% Simulate the raw data
+
+% sinoRaw is the data set without any scatter
+[sinoRaw, tubeCurrentProfile] = simulateCTRawData( phan, geom, spectrum, sinosDirKeV );
+
+%% Load MC scatter simulation results
+
+load( 'E:\MATLAB\CTData\ScatterSimulation\helical\scatter_helical_bowtie_pitch1_32rows.mat' );
+
+% sinoRaw_scatter is the data set after adding the simulated scatter, no
+% algorithm correction at all (anti-scatter grid is used)
+
+[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, primary_bowtie, scatter_bowtie, 10  );
+% sinoRaw_scatter_corr is the data set after adding the simulated scatter,
+% no algorithm correction at all (anti-scatter grid is used) 
+
+sinoRaw_scatter_corr = combineScatterSimulation( sinoRaw, primary_bowtie, scatter_bowtie, 10, 1 );
+
+figure; imshow( log10( squeeze( sinoRaw(end/2,:,1:10:end) ) ), [0 6]); title 'Primary photons';
+figure; imshow( log10( squeeze( sinoPrime(end/2,:,:)) ), [0 6] ); title 'Primary photons from MC';
+figure; imshow( log10( squeeze( sinoScatter(end/2,:,:)) ), [0 6] ); title 'Scattered photons from MC';
+
+
+%% Process the raw data
+
+geom_orignal = geom;
+
+% Flat filed normalization and log.  
+sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
+% Truncation artifact correction
+[ sinoAtt, geom ] = truncationCorrectionWaterCylinderFitting( sinoAtt, geom_orignal, 0.2, 4, 64 );
+
+% same here
+sinoAtt_scatter = processCTRawData( sinoRaw_scatter, spectrum, tubeCurrentProfile);
+sinoAtt_scatter = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter, geom_orignal, 0.2, 4, 64 );
+
+% same here
+sinoAtt_scatter_corr = processCTRawData( sinoRaw_scatter_corr, spectrum, tubeCurrentProfile);
+sinoAtt_scatter_corr = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter_corr, geom_orignal, 0.2, 4, 64 );
+
+%% Reconstruction for no scattering case
+
+% setting for reconstruction
+kernel = 'hamming';
+segmentLength = 'short';
+weightingMethod = 'wfdk';
+
+% call reconstruction function
+img_wfdk_noscatter = reconHelical( sinoAtt, geom, kernel, weightingMethod, segmentLength, false);
+
+% display
+img_wfdk_noscatter = rotateSinogram( img_wfdk_noscatter, 0, 1 );
+figure; imdisp( img_wfdk_noscatter(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_noscatter(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_noscatter(end/2,:,:))) , map.windowAtt );
+
+%% Reconstruction for scattering no correction case
+
+% call reconstruction function
+img_wfdk_scatter = reconHelical( sinoAtt_scatter, geom, kernel, weightingMethod, segmentLength, false);
+
+% display
+img_wfdk_scatter = rotateSinogram( img_wfdk_scatter, 0, 1 );
+figure; imdisp( img_wfdk_scatter(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter(end/2,:,:))) , map.windowAtt );
+
+
+%% Reconstruction for scattering with perfect correction case
+
+% call reconstruction function
+img_wfdk_scatter_corr = reconHelical( sinoAtt_scatter_corr, geom, kernel, weightingMethod, segmentLength, false);
+
+% display
+img_wfdk_scatter_corr = rotateSinogram( img_wfdk_scatter_corr, 0, 1 );
+figure; imdisp( img_wfdk_scatter_corr(:,:,end:-8:1), map.windowAtt);
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter_corr(:,end/2,:))) , map.windowAtt );
+figure; imdisp( fliplr( squeeze(img_wfdk_scatter_corr(end/2,:,:))) , map.windowAtt );
+
+
+##### SOURCE END #####
+--></body></html>
