@@ -16,7 +16,7 @@ turns = 8;
 % feel free to change the helical pitch
 pitch = 0.5; 
 
-sinosDir = [sinosDir sprintf( '%i-turns-%i-pitch', turns, round( pitch * 100 ) ), '/'];
+sinosDirKeV = [sinosDirKeV sprintf( '%i-turns-%i-pitch', turns, round( pitch * 100 ) ), '/'];
 
 % Geometry info
 geom = loadProjectionGeometryHelicalCT( p, turns, pitch );

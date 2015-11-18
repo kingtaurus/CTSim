@@ -11,7 +11,8 @@
 load 'temp.mat';
 
 % Load phantom
-[phan, map] = loadXCATPhantom(p);
+%[phan, map] = loadXCATPhantom(p);
+[phan, map ] = loadMaterialsDensityPhantom( p );
 % Load distorted pelvis phantom
 %[phan, map] = loadXCATPhantomDistorted(p);
 
@@ -24,11 +25,13 @@ load 'temp.mat';
 geom = loadProjectionGeometryCT( p );
 
 % Spectrum info
-spectrum = loadSpectraCT(p, geom, 1e6);
+spectrum = loadSpectraCT(p, geom, 1e6);  % For 4 by 4 detector
+% spectrum = loadSpectraCT(p, geom, 0.25*1e6); % For 2 by 2 detector
+% spectrum = loadSpectraCT(p, geom, 0.0625*1e6); % For 1 by 1 detector
 %sinoAtt = simulateAttenuationDataPhantom( phan, geom, spectrum, sinosDirKeV);
 
 % Compute ground truth
-%[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
+[imgGtAtt, imgGtHu ] = computeGroundTruth(phan, spectrum);
 
 
 %% Simulate the raw data
@@ -40,35 +43,40 @@ spectrum = loadSpectraCT(p, geom, 1e6);
 
 % load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\PelvisData_Final.mat');
 % load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis3_Cone_Scatter.mat');
-%load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Cone.mat');
-load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Cone_corrected.mat');
+% load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Cone.mat');
+%load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Pelvis5_Cone_corrected.mat');
+load( 'E:\MATLAB\CTData\scatter_simulation_pelvis\Simulation5_Final.mat');
+% bin 4*4 into 2*2
+% all_primary = phaserLargeDetectorBinning2(all_primary);
+% all_scatter = phaserLargeDetectorBinning2(all_scatter);
 
 % sinoRaw_scatter is the data set after adding the simulated scatter
 % no algorithm correction at all (anti-scatter grid is used)
 
 %[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, primary_final, scatter_final, 10);
 %[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, all_primary, all_scatter, 10);
-[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, all_primary, all_scatter, 10);
+%[sinoRaw_scatter, sinoPrime, sinoScatter] = combineScatterSimulation( sinoRaw, all_primary, all_scatter, 10);
 % sinoRaw_scatter_corr is the data set after adding the simulated scatter,
 % no algorithm correction at all (anti-scatter grid is used) 
 
 %sinoRaw_scatter_corr = combineScatterSimulation( sinoRaw, primary_final, scatter_final, 10, 1 );
 %sinoRaw_scatter_corr = combineScatterSimulation( sinoRaw, all_primary, all_scatter, 10, 1 );
 %[sinoRaw_scatter_corr, sinoPrime, sinoScatter] = combineScatterSimulationNew( sinoRaw, all_primary, all_scatter, 10,1); % With simple scatter correction
-sinoRaw_scatter_corr = combineScatterSimulationNew( sinoRaw, all_primary, all_scatter, 10,1); % With simple scatter correction
+[ sinoRaw_scatter_corr, sinoPrime, sinoScatter_remain ] = combineScatterSimulationNew( sinoRaw, all_primary, all_scatter, 10,1); % With simple scatter correction
 %sinoRaw_scatter_corr = combineScatterSimulation( sinoRaw, primary, scatter, 90, 1 );
 
 %figure; imshow( log10( squeeze( sinoRaw(end/2,:,1:10:end) ) ), [0 6]); title 'Primary photons';
-figure; imshow( log10( squeeze( sinoPrime(end/2,:,:)) ), [0 6] ); title 'Primary photons from MC';
-figure; imshow( log10( squeeze( sinoScatter(end/2,:,:)) ), [0 6] ); title 'Scattered photons from MC';
-figure; imshow( log10( squeeze( sinoRaw_scatter_corr(end/2,:,:)) ), [0 6] ); title 'Scatter corrected primary';
+figure; imdisp( ( squeeze( sinoPrime(:,:,:)) ), [0 1e4] ); title 'Primary photons from MC';
+figure; imdisp( ( sinoScatter_remain(:,:,:) ), [-1e2 1e2] ); title 'Scattered photons from MC';
+figure; imdisp( ( squeeze( sinoRaw_scatter_corr(:,:,1:10:end) ) ), [0 1e4] ); title 'Scatter corrected primary';
 
 %% Process the raw data
 
 geom_orignal = geom;
 
 % Takes uniform detector and bins outer edge as 4*4 to account for larger pixels near the outside 
-sinoRaw = phaserLargeDetectorBinning( sinoRaw );
+%sinoRaw = phaserLargeDetectorBinning( sinoRaw );
+sinoRaw = phaserLargeDetectorBinning2( sinoRaw ); % bins 4*4 pixels into 2*2 pixels
 
 % Flat filed normalization and log.  
 sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
@@ -76,12 +84,23 @@ sinoAtt = processCTRawData( sinoRaw, spectrum, tubeCurrentProfile);
 [ sinoAtt, geom ] = truncationCorrectionWaterCylinderFitting( sinoAtt, geom_orignal, 0.2, 4, 64 );
 
 % same here
-sinoAtt_scatter = processCTRawData( sinoRaw_scatter, spectrum, tubeCurrentProfile);
-sinoAtt_scatter = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter, geom_orignal, 0.2, 4, 64 );
+% sinoAtt_scatter = processCTRawData( sinoRaw_scatter, spectrum, tubeCurrentProfile);
+% sinoAtt_scatter = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter, geom_orignal, 0.2, 4, 64 );
 
 % same here
 sinoAtt_scatter_corr = processCTRawData( sinoRaw_scatter_corr, spectrum, tubeCurrentProfile);
 sinoAtt_scatter_corr = truncationCorrectionWaterCylinderFitting( sinoAtt_scatter_corr, geom_orignal, 0.2, 4, 64 );
+
+
+%% Padding the z-direction
+ [nu, nv, nview] = size(sinoAtt_scatter_corr);
+sinoAtt_scatter_corr1 =  zeros( nu+4*2, nv , nview, 'single' ); % Extend in z-direction
+sinoAtt_scatter_corr1(5:52, 1:nv, 1:nview) = sinoAtt_scatter_corr;
+sinoAtt_scatter_corr1(1:4,:,:) = repmat(sinoAtt_scatter_corr(1,:,:), 4, 1);
+sinoAtt_scatter_corr1(end-3:end,:,:) = repmat(sinoAtt_scatter_corr(end,:,:), 4, 1);
+
+geom.detSize(2) = geom.detSize(2) + 4*2;
+
 
 %% Reconstruction for no scattering case
 
@@ -126,12 +145,12 @@ figure; imdisp( fliplr( squeeze(imgFBP_scatter(:,end/2,:) ) ), map.windowHu );
 %figure; imdisp( fliplr( squeeze(imgFBP_scatter(end/2,:,:) ) ), map.windowHu );
 figure; imdisp( imgFBP_scatter(:,:,:), map.windowHu );
 
-%% Reconstruction for scattering with perfect correction case
+%% Reconstruction for scattering with scatter correction
 
 map.windowHu = [-1000 1000];
 
 % call reconstruction function
-imgAttFBP_scatter_corr = reconFBP( sinoAtt_scatter_corr, geom, 'hamming',1,1);
+imgAttFBP_scatter_corr = reconFBP( sinoAtt_scatter_corr1, geom, 'hamming',1,1);
 
 % display
 imgAttFBP_scatter_corr = rotateSinogram( imgAttFBP_scatter_corr, 0, 1 );
