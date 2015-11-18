@@ -1,57 +1,73 @@
+clear all;
 close all;
 
-load 'burn01.mat';
+data = load( 'burn_01.mat');
+imgKr = data.img;
+
+data = load( 'air_hot_02.mat');
+imgAir = data.img;
+
+clear data;
+
+%% image registration, you may skip this step
+
+imgKrReg = imgKr;
 
 [optimizer, metric] = imregconfig('monomodal');
-
-imgAirReg = imgAir;
-
 for i = 1 : size( imgAir, 3 )
-    
-    slice = imregister(imgAir(:, :, i), imgKr(:,:,i), 'rigid', optimizer, metric);
-    
-    imgAirReg( :,:,i) = slice;
-    
+    if mod(i, 50) == 0
+        fprintf('(%i/%i)... ', i, size(imgAir, 3 ) );
+    end
+    slice = imregister(imgKr(:,:,i), imgAir(:, :, i), 'rigid', optimizer, metric);
+    imgKrReg( :,:,i) = slice;
 end
 
+figure(23); imdisp( imgKr(:,end/2,:) - imgAir(:,end/2,:)  , [-0.1 0.1] );
 
+%% Get image pixel that are not gas
 
-%%
-solid = imgAirReg > 0.2;
+imgSub = imgKr - imgAir;
 
+% segmentation
+solid = imgAir > 0.22;
+solid = solid | imgKr > 0.22;
+
+% mophological blurring in all dimension
 final = solid;
-
 solid_blurred = solid; 
 
+% in x direction
 for i = 1 : size( imgAir, 1 )
-    solid_blurred( i, :, : ) = imdilate( solid(i,:,:) , ones(2) ); 
+    solid_blurred( i, :, : ) = imdilate( solid(i,:,:) , ones(5) ); 
 end
-
 final = final | solid_blurred;
 
+% in y direction
 for i = 1 : size( imgAir, 1 )
-    solid_blurred( :, i, : ) = imdilate( solid(:,i,:) , ones(2) ); 
+    solid_blurred( :, i, : ) = imdilate( solid(:,i,:) , ones(5) ); 
 end
-
 final = final | solid_blurred;
 
+% in z direction
 for i = 1 : size( imgAir, 3 )
-    solid_blurred( :, :, i ) = imdilate( solid(:,:,i) , ones(2) ); 
+    solid_blurred( :, :, i ) = imdilate( solid(:,:,i) , ones(5) ); 
 end
-
-
 final = final | solid_blurred;
 
-final( :, :, 395 : end ) = false;
+final = final | abs( imgSub ) > 0.04;
+
+% for slices that have porous media below system resolution
+ final( :, :, 370 : end ) = false;
 
 
-%% 
+%% Now let's compute average density for each slice
+close all;
 
-imgSub = imgKr - imgAirReg;
+% bounding box with the
+x = [123 284];
+y = [180 290];
 
-%%
-x = [95 182];
-y = [61 178];
+%final( 120:140,120:140,:) = true;
 
 att_curve = zeros( 1, size( imgAir, 3));
 
@@ -65,9 +81,15 @@ for i = 1 : length( att_curve )
 end
 
 figure; plot( att_curve ); 
+xlabel 'slice #', ylabel 'attenuation';
 
 figure;
-imagesc( squeeze( imgSub(:,end/2,:) )' , [-0.01 0.02] ); 
+imagesc( squeeze( imgSub(:,end/2,:) )' , [-0.01 0.02] ); axis image
+
+figure;
+slice = imgSub(:,end/2,:);
+slice( final(:,end/2,:) ) = 0;
+imagesc( squeeze( slice )' , [-0.01 0.02] ); axis image
 
 
 %%
